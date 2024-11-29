@@ -7,6 +7,8 @@ set(MICROHS_FETCH_FROM_GIT on)
 include(pico_sdk_import.cmake)
 include(microhs_import.cmake)
 
+set(MICROHS_MODULE Drive)
+
 project(pico-go
         LANGUAGES ASM C CXX
         VERSION 1.0
@@ -58,11 +60,11 @@ add_custom_target(cpphs ALL DEPENDS ${MICROHS_PATH}/bin/cpphs)
 
 add_custom_command(OUTPUT ${MICROHS_PATH}/build/${CMAKE_PROJECT_NAME}_comb.c
   COMMAND mkdir -p build
-  COMMAND bin/mhs -i${CMAKE_CURRENT_SOURCE_DIR}/src Blinky -z -obuild/${CMAKE_PROJECT_NAME}_comb.c
+  COMMAND bin/mhs -i${CMAKE_CURRENT_SOURCE_DIR}/src ${MICROHS_MODULE} -z -obuild/${CMAKE_PROJECT_NAME}_comb.c
   COMMAND sed -i s,mhsffi.h,\.\./src/runtime/mhsffi.h, build/${CMAKE_PROJECT_NAME}_comb.c
   COMMAND sed -i '/mhsffi.h/ a "#include \"../src/runtime/config-raspberry-pico.h\""' build/${CMAKE_PROJECT_NAME}_comb.c
   WORKING_DIRECTORY ${MICROHS_PATH}
-  DEPENDS src/Blinky.hs ${MICROHS_PATH}/bin/mhs ${MICROHS_PATH}/bin/cpphs
+  DEPENDS src/${MICROHS_MODULE}.hs ${MICROHS_PATH}/bin/mhs ${MICROHS_PATH}/bin/cpphs
 )
 add_custom_target(${CMAKE_PROJECT_NAME}_comb.c ALL DEPENDS ${MICROHS_PATH}/build/${CMAKE_PROJECT_NAME}_comb.c)
 
