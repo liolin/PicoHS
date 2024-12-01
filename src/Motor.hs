@@ -2,6 +2,10 @@ module Motor
   ( Motor
   , init_motor
   , forward
+  , backward
+  , left
+  , right
+  , stop
   ) where
 import Prelude
 import Data.Maybe(fromJust)
@@ -21,10 +25,10 @@ data Motor = Motor
   }
 
 ain1 :: PW.GpioPin
-ain1 = fromJust $ PW.parseGpioPin 18
+ain1 = fromJust $ PW.parseGpioPin 17
 
 ain2 :: PW.GpioPin
-ain2 = fromJust $ PW.parseGpioPin 17
+ain2 = fromJust $ PW.parseGpioPin 18
 
 bin1 :: PW.GpioPin
 bin1 = fromJust $ PW.parseGpioPin 19
@@ -88,13 +92,82 @@ forward motor speed = do
       return ()
 
 backward :: Motor -> Int -> IO ()
-backward = undefined
+backward motor speed = do
+  if speed >= 0 && speed <= 100
+    then do
+      PW.pwmSetChanLevel (motorSlice_num_a motor) PW.PwmChanA (speed*0xFFFF `div` 100)
+      PW.pwmSetChanLevel (motorSlice_num_b motor) PW.PwmChanB (speed*0xFFFF `div` 100)
+      PW.gpioPut (motorAin1 motor) False
+      PW.gpioPut (motorAin2 motor) True
+      PW.gpioPut (motorBin1 motor) True
+      PW.gpioPut (motorBin2 motor) False
+    else
+      return ()
+
  
 left :: Motor -> Int -> IO ()
-left = undefined
+left motor speed = do
+  if speed >= 0 && speed <= 100
+    then do
+      PW.pwmSetChanLevel (motorSlice_num_a motor) PW.PwmChanA (speed*0xFFFF `div` 100)
+      PW.pwmSetChanLevel (motorSlice_num_b motor) PW.PwmChanB (speed*0xFFFF `div` 100)
+      PW.gpioPut (motorAin1 motor) False
+      PW.gpioPut (motorAin2 motor) True
+      PW.gpioPut (motorBin1 motor) False
+      PW.gpioPut (motorBin2 motor) True
+    else
+      return ()
 
 right :: Motor -> Int -> IO ()
-right = undefined
+right motor speed = do
+  if speed >= 0 && speed <= 100
+    then do
+      PW.pwmSetChanLevel (motorSlice_num_a motor) PW.PwmChanA (speed*0xFFFF `div` 100)
+      PW.pwmSetChanLevel (motorSlice_num_b motor) PW.PwmChanB (speed*0xFFFF `div` 100)
+      PW.gpioPut (motorAin1 motor) True
+      PW.gpioPut (motorAin2 motor) False
+      PW.gpioPut (motorBin1 motor) True
+      PW.gpioPut (motorBin2 motor) False
+    else
+      return ()
 
-stop :: Motor -> Int -> IO ()
-stop = undefined
+stop :: Motor -> IO ()
+stop motor = do
+  PW.pwmSetChanLevel (motorSlice_num_a motor) PW.PwmChanA 0
+  PW.pwmSetChanLevel (motorSlice_num_b motor) PW.PwmChanB 0
+  PW.gpioPut (motorAin1 motor) False
+  PW.gpioPut (motorAin2 motor) False
+  PW.gpioPut (motorBin1 motor) False
+  PW.gpioPut (motorBin2 motor) False
+
+
+setMotor :: Motor -> Int -> Int -> IO ()
+setMotor motor left right = do
+  if left >= 0 && left <= 100
+    then do
+      PW.gpioPut (motorAin1 motor) True
+      PW.gpioPut (motorAin2 motor) False
+      PW.pwmSetChanLevel (motorSlice_num_a motor) PW.PwmChanA (left*0xFFFF `div` 100)
+    else
+      return ()
+  if left < 0 && left >= -100
+    then do
+      PW.gpioPut (motorAin1 motor) False
+      PW.gpioPut (motorAin2 motor) True
+      PW.pwmSetChanLevel (motorSlice_num_a motor) PW.PwmChanA $ negate (left*0xFFFF `div` 100)
+    else
+      return ()
+  if right >= 0 && right <= 100
+    then do
+      PW.gpioPut (motorBin1 motor) True
+      PW.gpioPut (motorBin2 motor) False
+      PW.pwmSetChanLevel (motorSlice_num_b motor) PW.PwmChanB (right*0xFFFF `div` 100)
+    else
+      return ()
+  if right < 0 && right >= -100
+    then do
+      PW.gpioPut (motorBin1 motor) False
+      PW.gpioPut (motorBin2 motor) True
+      PW.pwmSetChanLevel (motorSlice_num_b motor) PW.PwmChanB $ negate (right*0xFFFF `div` 100)
+    else
+      return ()
