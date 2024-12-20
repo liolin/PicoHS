@@ -1,6 +1,8 @@
 #ifndef CONFIG_RASPERRYPICO_H
 #define CONFIG_RASPERRYPICO_H
 
+#include <stdlib.h>
+
 /*
  * Include stdio functions.
  * Without this none of the file I/O in System.IO is available.
@@ -72,10 +74,24 @@
 #define SANITY 0   /* do some sanity checks */
 #define STACKOVL 0 /* check for stack overflow */
 
+/*
+ * The Raspberry Pi Pico 1 has 264KB of SRAM, and 2MB of on-board flash memory.
+ * So the sum of the stack and heap must be smaller than 264 * 1024 = 270336.
+ * But the MicroHs runtime also requires memory. Therefore a smaller amount of
+ * memory will be availabel
+ */
+/*
+ * The allocated memory is calculated as follows:
+ * HEAP_CELLS * sizeof(node) where sizeof(node) = 16
+ * HEAP_CELLS * 16 = ?
+ */
 #define HEAP_CELLS 4000
+/*
+ * The allocated memory is calculated as follows:
+ * sizeof(NODEPTR) * STACK_SIZE where sizeof(NODEPTR) = 8 bytes
+ * STACK_SIZE * 8 = ?
+ */
 #define STACK_SIZE 500
-
-#define HASHBITS 9
 
 #define F_CPU 16000000UL
 
@@ -229,8 +245,10 @@ uint _max_fails = 20;
 uint16_t _last_value = 0;
 uint16_t _calibrated_min[5] = {117, 129, 124, 127, 101};
 uint16_t _calibrated_max[5] = {841, 899, 925, 945, 823};
+uint16_t *_values = 0;
 
 void init_sensor() {
+  _values = malloc(sizeof(uint16_t) * 6);
   uint offset = pio_add_program(PIO0, &spi_cpha0_program);
   _sm = pio_claim_unused_sm(PIO0, true);
 
@@ -276,13 +294,13 @@ void read_calibrated(uint16_t *sensor_values) {
   }
 }
 
-void read_line(uint16_t *values) {
-  read_calibrated(values + 1);
+uint16_t *read_line() {
+  read_calibrated(_values + 1);
   double avg = 0;
   double sum1 = 0;
   bool on_line = false;
   for (int i = 0; i < NUM_SENSORS; ++i) {
-    uint16_t value = values[i];
+    uint16_t value = _values[i];
     /* if (white_line) */
     /*   value = 1000 - value; */
 
@@ -323,7 +341,11 @@ void read_line(uint16_t *values) {
       _last_value = (uint16_t)(avg / sum1);
   }
 
-  values[0] = _last_value;
+  _values[0] = _last_value;
+  for (int i = 0; i < 6; i++) {
+    printf("%d ", _values[i]);
+  }
+  return _values;
 }
 
 #define INITIALIZATION
@@ -342,15 +364,7 @@ void main_setup(void) {
   }
 }
 
-void myexit(int n) {
-  while (true) {
-    pico_set_led(true);
-    sleep_ms(250);
-    pico_set_led(false);
-    sleep_ms(250);
-    printf("Finished\n");
-  }
-}
+void myexit(int n) { printf("Finished with code: %d\n", n); }
 #define EXIT myexit
 
 #endif /* CONFIG_ARDUINOUNO_H */

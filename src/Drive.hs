@@ -24,6 +24,8 @@ init = do
   motor <- initMotor
   sensor <- initSensor
   forward motor 10
+  PW.sleepMs 1000
+  stop motor
   PW.printLn "Init Application Finished"
   return $ Car motor sensor
 
