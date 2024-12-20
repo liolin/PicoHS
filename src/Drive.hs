@@ -4,6 +4,7 @@ import Data.Maybe(fromJust)
 import Pico
 import qualified PicoWrapper as PW
 import Motor
+import Sensor
 
 defaultLedPin :: PW.GpioPin
 defaultLedPin = fromJust $ PW.parseGpioPin 25
@@ -20,6 +21,7 @@ init = do
   PW.gpioInit defaultLedPin
   PW.gpioSetDir defaultLedPin PW.Out
   motor <- initMotor
+  sensor <- initSensor
   forward motor 10
   PW.printLn "Init Application Finished"
   return motor

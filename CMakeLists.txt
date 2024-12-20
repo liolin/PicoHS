@@ -30,9 +30,9 @@ add_dependencies(${CMAKE_PROJECT_NAME} ${CMAKE_PROJECT_NAME}_comb.c)
 #     ${CMAKE_CURRENT_LIST_DIR}/st7789_lcd.pio
 # )
 
-# pico_generate_pio_header(${CMAKE_PROJECT_NAME}
-#     ${CMAKE_CURRENT_LIST_DIR}/spi.pio
-# )
+pico_generate_pio_header(${CMAKE_PROJECT_NAME}
+    ${CMAKE_CURRENT_LIST_DIR}/spi.pio
+)
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
   pico_stdlib
