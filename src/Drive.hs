@@ -19,7 +19,7 @@ init = do
   PW.printLn "Init Application"
   PW.gpioInit defaultLedPin
   PW.gpioSetDir defaultLedPin PW.Out
-  motor <- init_motor
+  motor <- initMotor
   forward motor 10
   PW.printLn "Init Application Finished"
   return motor
