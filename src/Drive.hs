@@ -9,31 +9,35 @@ import Sensor
 defaultLedPin :: PW.GpioPin
 defaultLedPin = fromJust $ PW.parseGpioPin 25
 
-main :: IO ()
-main = do
-  motor <- init
-  appLoop motor
+data Car = Car Motor Sensor
 
-init :: IO Motor
+main :: IO ()
+main = init >>= \car -> appLoop car
+
+init :: IO Car
 init = do
   PW.stdioInitAll
   PW.printLn "Init Application"
   PW.gpioInit defaultLedPin
   PW.gpioSetDir defaultLedPin PW.Out
+
   motor <- initMotor
   sensor <- initSensor
   forward motor 10
   PW.printLn "Init Application Finished"
-  return motor
+  return $ Car motor sensor
 
-appLoop :: Motor -> IO ()
-appLoop motor = do
+appLoop :: Car -> IO ()
+appLoop car@(Car motor sensor) = do
   PW.printLn "App Loop"
   setLed True
   PW.sleepMs 1000
   setLed False
   PW.sleepMs 1000
-  appLoop motor
+
+  (position, sensorValues) <- readLine sensor
+
+  appLoop car
 
 setLed :: Bool -> IO ()
-setLed on = PW.gpioPut defaultLedPin on
+setLed = PW.gpioPut defaultLedPin

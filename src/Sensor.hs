@@ -20,8 +20,8 @@ initSensor = do
   c_init_sensor
   return Sensor
 
-readLine :: IO (Int, [Int])
-readLine = do
+readLine :: Sensor -> IO (Int, [Int])
+readLine _ = do
   ptr <- mallocArray 6
   c_read_line ptr
   xs <- peekArray 6 ptr
