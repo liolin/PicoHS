@@ -26,14 +26,16 @@ module PicoWrapper
   ) where
 import Prelude
 import Pico
-import Foreign(Ptr)
+import Foreign (Ptr)
 import Foreign.C.String
+import Foreign.Marshal.Alloc (free)
 
 
 print :: String -> IO ()
 print s = do
   cas <- newCAString s
   c_printf cas
+  free cas
 
 printLn :: String -> IO ()
 printLn s = print $ s ++ "\n"
