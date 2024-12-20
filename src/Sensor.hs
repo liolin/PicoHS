@@ -1,6 +1,7 @@
 module Sensor
   ( Sensor
   , initSensor
+  , readLine
   ) where
 import Prelude
 import Foreign.Marshal.Array
