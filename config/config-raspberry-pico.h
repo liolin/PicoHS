@@ -65,8 +65,9 @@
  * The ERR macro should report an error and exit.
  * If not defined, a generic one will be used.
  */
-/* #define ERR(s) */
-/* #define ERR1(s,a) */
+#define ERR(s)    do { fprintf(stderr,"ERR: "s"\n");   EXIT(1); } while(0)
+#define ERR1(s,a) do { fprintf(stderr,"ERR: "s"\n",a); EXIT(1); } while(0)
+
 
 #define GCRED 0    /* do some reductions during GC */
 #define FASTTAGS 0 /* compute tag by pointer subtraction */
@@ -106,13 +107,6 @@ void pico_set_led(bool led_on) {
   // Just set the GPIO on or off
   gpio_put(PICO_DEFAULT_LED_PIN, led_on);
 #endif
-}
-
-pwm_config *pico_pwm_get_default_config() {
-  pwm_config config = pwm_get_default_config();
-  pwm_config *pconfig = malloc(sizeof(config));
-  memcpy(pconfig, &config, sizeof(config));
-  return pconfig;
 }
 
 #define AIN1 17
@@ -345,7 +339,6 @@ uint16_t *read_line() {
   for (int i = 0; i < 6; i++) {
     printf("%d ", _values[i]);
   }
-  return _values;
 }
 
 #define INITIALIZATION

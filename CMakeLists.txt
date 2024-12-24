@@ -22,7 +22,7 @@ pico_sdk_init()
 # microhs_init()
 
 add_executable(${CMAKE_PROJECT_NAME}
-    ${MICROHS_PATH}/build/${CMAKE_PROJECT_NAME}.c
+    ${MICROHS_PATH}/build/${CMAKE_PROJECT_NAME}_comb.c
 )
 add_dependencies(${CMAKE_PROJECT_NAME} ${CMAKE_PROJECT_NAME}_comb.c)
 
@@ -46,6 +46,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 pico_enable_stdio_usb(${CMAKE_PROJECT_NAME} 1)
 pico_add_extra_outputs(${CMAKE_PROJECT_NAME})
 
+FILE(GLOB HsSources src/*.hs)
 add_custom_command(OUTPUT ${MICROHS_PATH}/bin/mhs
   COMMAND make bin/mhs
   WORKING_DIRECTORY ${MICROHS_PATH}
@@ -61,17 +62,12 @@ add_custom_target(cpphs ALL DEPENDS ${MICROHS_PATH}/bin/cpphs)
 add_custom_command(OUTPUT ${MICROHS_PATH}/build/${CMAKE_PROJECT_NAME}_comb.c
   COMMAND mkdir -p build
   COMMAND bin/mhs -i${CMAKE_CURRENT_SOURCE_DIR}/src ${MICROHS_MODULE} -z -obuild/${CMAKE_PROJECT_NAME}_comb.c
-  COMMAND sed -i s,mhsffi.h,\.\./src/runtime/mhsffi.h, build/${CMAKE_PROJECT_NAME}_comb.c
-  COMMAND sed -i '/mhsffi.h/ a "#include \"../../../../config/config-raspberry-pico.h\""' build/${CMAKE_PROJECT_NAME}_comb.c
+  COMMAND sed -i '/mhsffi.h/ a "#include \"../../../../config/eval-raspberry-pico.c\""' build/${CMAKE_PROJECT_NAME}_comb.c
+  COMMAND sed -i '/mhsffi.h/d' build/${CMAKE_PROJECT_NAME}_comb.c
   WORKING_DIRECTORY ${MICROHS_PATH}
-  DEPENDS src/${MICROHS_MODULE}.hs ${MICROHS_PATH}/bin/mhs ${MICROHS_PATH}/bin/cpphs
+  DEPENDS ${HsSources} ${MICROHS_PATH}/bin/mhs ${MICROHS_PATH}/bin/cpphs
 )
 add_custom_target(${CMAKE_PROJECT_NAME}_comb.c ALL DEPENDS ${MICROHS_PATH}/build/${CMAKE_PROJECT_NAME}_comb.c)
-
-FILE(WRITE ${MICROHS_PATH}/build/${CMAKE_PROJECT_NAME}.c
-"#include \"${CMAKE_PROJECT_NAME}_comb.c\"\n"
-"#include \"../../../../config/eval-raspberry-pico.c\"\n"
-)
 
 FILE(WRITE config/eval-raspberry-pico.c
 "#include \"config-raspberry-pico.h\"\n"

@@ -6,6 +6,7 @@ module Sensor
 import Prelude
 import Foreign.Marshal.Array
 import Foreign.Marshal.Alloc
+import Foreign.ForeignPtr
 import Foreign.Ptr
 
 import qualified PicoWrapper as PW
@@ -21,11 +22,9 @@ initSensor = do
 
 readLine :: Sensor -> IO (Int, [Int])
 readLine _ = do
-  -- ptr <- mallocArray 6 :: IO (Ptr Int)
-  ptr <- c_read_line
-  -- xs <- peekArray 6 ptr
-  -- free ptr
-  let xs = [0, 1, 2, 3, 4, 5]
+  ptr <- c_read_line >>= newForeignPtr_
+  -- peekArray causes an error, but why?
+  xs <- withForeignPtr ptr $ peekArray 6
   return (head xs, tail xs)
 
 

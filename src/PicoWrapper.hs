@@ -12,7 +12,6 @@ module PicoWrapper
   , gpioSetDir 
   , gpioPut
   , gpioSetFunction
-  , pwmGetDefaultConfig
   , pwmConfigSetClkDivInt
   , pwmGpioToSliceNum
   , pwmInit
@@ -100,11 +99,6 @@ gpioSetFunction (GpioPin pin) function = c_gpio_set_function pin (castGpioFuncti
 
 newtype PtrPwmConfig = PtrPwmConfig (Ptr PwmConfig)
 newtype PwmSlice = PwmSlice Int
-
-pwmGetDefaultConfig :: IO PtrPwmConfig
-pwmGetDefaultConfig = do
-  config <- c_pico_pwm_get_default_config
-  return $ PtrPwmConfig config
 
 pwmConfigSetClkDivInt :: PtrPwmConfig -> Int -> IO ()
 pwmConfigSetClkDivInt (PtrPwmConfig config) = c_pwm_config_set_clkdiv_int config

@@ -5,8 +5,6 @@ module Pico( c_gpio_init
            , c_gpio_get
            , c_sleep_ms
 
-           , c_pico_pwm_get_default_config
-           -- , c_pwm_config_set_clkdiv
            , c_pwm_config_set_clkdiv_int
            , c_pwm_gpio_to_slice_num
            , c_pwm_init
@@ -29,8 +27,6 @@ foreign import ccall "pico/stdlib.h gpio_put"          c_gpio_put          :: In
 foreign import ccall "pico/stdlib.h gpio_get"          c_gpio_get          :: Int    -> IO Int
 foreign import ccall "pico/stdlib.h sleep_ms"          c_sleep_ms          :: Int    -> IO ()
 
-foreign import ccall "pico_pwm_get_default_config" c_pico_pwm_get_default_config    :: IO (Ptr PwmConfig)
--- foreign import ccall "hardware/pwm.h pwm_config_set_clkdiv" c_pwm_config_set_clkdiv :: Ptr PwmConfig -> Float -> IO ()
 foreign import ccall "hardware/pwm.h pwm_config_set_clkdiv_int" c_pwm_config_set_clkdiv_int :: Ptr PwmConfig -> Int -> IO ()
 foreign import ccall "hardware/pwm.h pwm_gpio_to_slice_num" c_pwm_gpio_to_slice_num :: Int -> IO Int
 foreign import ccall "hardware/pwm.h pwm_init"              c_pwm_init :: Int -> Ptr PwmConfig -> Int -> IO ()
