@@ -1,0 +1,562 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+new file mode 100644
+index 0000000..f16de4d
+--- /dev/null
++++ b/CMakeLists.txt
+@@ -0,0 +1,24 @@
++cmake_minimum_required(VERSION 3.13)
++
++# initialize the SDK based on PICO_SDK_PATH
++# note: this must happen before project()
++include(pico_sdk_import.cmake)
++
++project(my_project)
++
++# initialize the Raspberry Pi Pico SDK
++pico_sdk_init()
++
++add_executable(blink
++    src/runtime/main.c
++    )
++
++# pull in common dependencies
++target_link_libraries(blink pico_stdlib)
++
++#if (PICO_CYW43_SUPPORTED)
++#    target_link_libraries(blink pico_cyw43_arch_none)
++#endif()
++
++# create map/bin/hex file etc.
++pico_add_extra_outputs(blink)
+diff --git a/boards/raspberry-pico/.gitignore b/boards/raspberry-pico/.gitignore
+new file mode 100644
+index 0000000..4b3acc4
+--- /dev/null
++++ b/boards/raspberry-pico/.gitignore
+@@ -0,0 +1,4 @@
++deps/
++build/
++CMakeFiles/
++CMakeCache.txt
+\ No newline at end of file
+diff --git a/boards/raspberry-pico/CMakeLists.txt b/boards/raspberry-pico/CMakeLists.txt
+new file mode 100644
+index 0000000..d6e60d2
+--- /dev/null
++++ b/boards/raspberry-pico/CMakeLists.txt
+@@ -0,0 +1,32 @@
++cmake_minimum_required(VERSION 3.13)
++
++# initialize the SDK based on PICO_SDK_PATH
++# note: this must happen before project()
++include(deps/pico-sdk/external/pico_sdk_import.cmake)
++
++project(MicroHs_RP)
++
++# initialize the Raspberry Pi Pico SDK
++pico_sdk_init()
++
++add_executable(blinky
++    build/blinky.c
++)
++
++add_executable(blinky_btn
++    build/blinky_btn.c
++)
++
++# pull in common dependencies
++target_link_libraries(blinky pico_stdlib)
++target_link_libraries(blinky_btn pico_stdlib)
++
++pico_enable_stdio_usb(blinky 1)
++pico_enable_stdio_uart(blinky 0)
++
++pico_enable_stdio_usb(blinky_btn 1)
++pico_enable_stdio_uart(blinky_btn 0)
++
++# create map/bin/hex file etc.
++pico_add_extra_outputs(blinky)
++pico_add_extra_outputs(blinky_btn)
+diff --git a/boards/raspberry-pico/Makefile b/boards/raspberry-pico/Makefile
+new file mode 100644
+index 0000000..6287593
+--- /dev/null
++++ b/boards/raspberry-pico/Makefile
+@@ -0,0 +1,40 @@
++MHSDIR=../..
++BIN=../../bin
++TOOLS=../../Tools
++
++build: build/blinky_comb.c build/blinky.c build/blinky_btn_comb.c build/blinky_btn.c
++	cmake -B build -DPICO_SDK_PATH=deps/pico-sdk/
++	cmake --build build
++
++# Generate combinator file
++build/blinky_comb.c:	src/Blinky.hs $(BIN)/mhs
++	@mkdir -p build
++	MHSDIR=$(MHSDIR) $(BIN)/mhs -isrc Blinky -z -obuild/blinky_comb.c
++	sed -i s#mhsffi.h#../../../src/runtime/mhsffi.h# build/blinky_comb.c
++	sed -i '/mhsffi.h/ a #include "../../../src/runtime/config-raspberry-pico.h"' build/blinky_comb.c
++
++build/blinky_btn_comb.c:	src/BlinkyBtn.hs $(BIN)/mhs
++	@mkdir -p build
++	MHSDIR=$(MHSDIR) $(BIN)/mhs -isrc BlinkyBtn -z -obuild/blinky_btn_comb.c
++	sed -i s#mhsffi.h#../../../src/runtime/mhsffi.h# build/blinky_btn_comb.c
++	sed -i '/mhsffi.h/ a #include "../../../src/runtime/config-raspberry-pico.h"' build/blinky_btn_comb.c
++
++$(BIN)/mhs:	$(MHSDIR)/src/runtime/*.c $(MHSDIR)/src/runtime/*.h
++	make -C $(MHSDIR) bin/mhs
++
++build/blinky.c:
++	@mkdir -p build
++	echo "#include \"blinky_comb.c\"" > build/blinky.c
++	echo "#include \"$(MHSDIR)/../src/runtime/eval-raspberry-pico.c\"" >> build/blinky.c
++
++build/blinky_btn.c:
++	@mkdir -p build
++	echo "#include \"blinky_btn_comb.c\"" > build/blinky_btn.c
++	echo "#include \"$(MHSDIR)/../src/runtime/eval-raspberry-pico.c\"" >> build/blinky_btn.c
++
++
++pico-sdk:
++	git clone https://github.com/raspberrypi/pico-sdk.git deps/pico-sdk
++
++
++.PHONY:	pico-sdk build/blinky.c build/blinky_btn.c build
+diff --git a/boards/raspberry-pico/README.md b/boards/raspberry-pico/README.md
+new file mode 100644
+index 0000000..caf713f
+--- /dev/null
++++ b/boards/raspberry-pico/README.md
+@@ -0,0 +1,21 @@
++# Blinky for the Raspberry Pi Pico
++
++## How to build blinky and blinkyBtn
++
++Run the following commands
++
++```sh
++make pico-sdk
++make build
++```
++
++To copy the applications on to the Raspberry Pi Pico mount it and then copy one of the following uf2 files to the device:
++- build/blinky.uf2
++- build/blinkyBtn.uf2
++
++
++For BlinkyBtn to work properly an external LED and a button must be connected to the following GPIO pins:
++- Button: GP19
++- External LED: GP20
++
++![RP Pico LED / Button connections](img/RPPico_LED_Button.jpg)
+diff --git a/boards/raspberry-pico/img/RPPico_LED_Button.jpg b/boards/raspberry-pico/img/RPPico_LED_Button.jpg
+new file mode 100644
+index 0000000..107ca20
+Binary files /dev/null and b/boards/raspberry-pico/img/RPPico_LED_Button.jpg differ
+diff --git a/boards/raspberry-pico/src/Blinky.hs b/boards/raspberry-pico/src/Blinky.hs
+new file mode 100644
+index 0000000..6e9207e
+--- /dev/null
++++ b/boards/raspberry-pico/src/Blinky.hs
+@@ -0,0 +1,53 @@
++module Blinky(main) where
++import Prelude
++
++defaultLed :: Int
++defaultLed = 25
++
++gpioLed :: Int
++gpioLed = 20
++
++gpioOut :: Int
++gpioOut = 1
++
++gpioIn :: Int
++gpioIn = 0
++
++main :: IO ()
++main = do
++  init
++  blinky
++
++init :: IO ()
++init = do
++  c_stdio_init_all
++  c_gpio_init gpioLed
++  c_gpio_init defaultLed
++  c_gpio_set_dir gpioLed gpioOut
++  c_gpio_set_dir defaultLed gpioOut
++
++blinky :: IO ()
++blinky = do
++  setLed True
++  wait 2000
++  setLed False
++  wait 2000
++  blinky
++
++foreign import ccall "set_led" set_led :: Int -> IO ()
++foreign import ccall "delay_ms" delay_ms :: Int -> IO ()
++
++foreign import ccall "pico/stdlib.h gpio_init"      c_gpio_init      :: Int -> IO ()
++foreign import ccall "pico/stdlib.h gpio_set_dir"   c_gpio_set_dir   :: Int -> Int -> IO ()
++foreign import ccall "pico/stdlib.h gpio_put"       c_gpio_put       :: Int -> Int -> IO ()
++foreign import ccall "pico/stdlib.h gpio_get"       c_gpio_get       :: Int -> IO Int
++foreign import ccall "pico/stdlib.h sleep_ms"       c_sleep_ms       :: Int -> IO ()
++foreign import ccall "pico/stdlib.h stdio_init_all" c_stdio_init_all :: IO ()
++
++setLed :: Bool -> IO ()
++setLed on = do
++  c_gpio_put defaultLed $ if on then 1 else 0
++  c_gpio_put gpioLed $ if on then 1 else 0
++
++wait :: Int -> IO ()
++wait n = c_sleep_ms n
+diff --git a/boards/raspberry-pico/src/BlinkyBtn.hs b/boards/raspberry-pico/src/BlinkyBtn.hs
+new file mode 100644
+index 0000000..9b01781
+--- /dev/null
++++ b/boards/raspberry-pico/src/BlinkyBtn.hs
+@@ -0,0 +1,77 @@
++module BlinkyBtn(main) where
++import Prelude
++
++defaultLed :: Int
++defaultLed = 25
++
++gpioLed :: Int
++gpioLed = 20
++
++gpioButton :: Int
++gpioButton = 19
++
++
++gpioOut :: Int
++gpioOut = 1
++
++gpioIn :: Int
++gpioIn = 0
++
++main :: IO ()
++main = do
++  init
++  blinky
++
++init :: IO ()
++init = do
++  c_gpio_init gpioLed
++  c_gpio_init gpioButton
++  c_gpio_set_dir gpioLed gpioOut
++  c_gpio_set_dir gpioButton gpioIn
++
++blinky :: IO ()
++blinky = do
++  showLed <- isButtonPressed
++  if showLed
++    then setExternalLed True
++    else setDefaultLed True
++
++  wait 250
++
++  if showLed
++    then setExternalLed False
++    else setDefaultLed False
++
++  wait 250
++  blinky
++
++foreign import ccall "set_led" set_led :: Int -> IO ()
++foreign import ccall "delay_ms" delay_ms :: Int -> IO ()
++
++foreign import ccall "pico/stdlib.h gpio_init"      c_gpio_init      :: Int -> IO ()
++foreign import ccall "pico/stdlib.h gpio_set_dir"   c_gpio_set_dir   :: Int -> Int -> IO ()
++foreign import ccall "pico/stdlib.h gpio_put"       c_gpio_put       :: Int -> Int -> IO ()
++foreign import ccall "pico/stdlib.h gpio_get"       c_gpio_get       :: Int -> IO Int
++
++foreign import ccall "pico/stdlib.h sleep_ms"       c_sleep_ms       :: Int -> IO ()
++
++setExternalLed :: Bool -> IO ()
++setExternalLed on = c_gpio_put gpioLed $ if on then 1 else 0
++
++setDefaultLed :: Bool -> IO ()
++setDefaultLed on = c_gpio_put defaultLed $ if on then 1 else 0
++
++setLed :: Bool -> IO ()
++setLed on = do
++  c_gpio_put defaultLed $ if on then 1 else 0
++  c_gpio_put gpioLed $ if on then 1 else 0
++
++isButtonPressed :: IO Bool
++isButtonPressed = do
++  value <- c_gpio_get gpioButton
++  pure $ if value == 1
++    then True
++    else False
++
++wait :: Int -> IO ()
++wait n = c_sleep_ms n
+diff --git a/pico_sdk_import.cmake b/pico_sdk_import.cmake
+new file mode 100644
+index 0000000..a0721d0
+--- /dev/null
++++ b/pico_sdk_import.cmake
+@@ -0,0 +1,84 @@
++# This is a copy of <PICO_SDK_PATH>/external/pico_sdk_import.cmake
++
++# This can be dropped into an external project to help locate this SDK
++# It should be include()ed prior to project()
++
++if (DEFINED ENV{PICO_SDK_PATH} AND (NOT PICO_SDK_PATH))
++    set(PICO_SDK_PATH $ENV{PICO_SDK_PATH})
++    message("Using PICO_SDK_PATH from environment ('${PICO_SDK_PATH}')")
++endif ()
++
++if (DEFINED ENV{PICO_SDK_FETCH_FROM_GIT} AND (NOT PICO_SDK_FETCH_FROM_GIT))
++    set(PICO_SDK_FETCH_FROM_GIT $ENV{PICO_SDK_FETCH_FROM_GIT})
++    message("Using PICO_SDK_FETCH_FROM_GIT from environment ('${PICO_SDK_FETCH_FROM_GIT}')")
++endif ()
++
++if (DEFINED ENV{PICO_SDK_FETCH_FROM_GIT_PATH} AND (NOT PICO_SDK_FETCH_FROM_GIT_PATH))
++    set(PICO_SDK_FETCH_FROM_GIT_PATH $ENV{PICO_SDK_FETCH_FROM_GIT_PATH})
++    message("Using PICO_SDK_FETCH_FROM_GIT_PATH from environment ('${PICO_SDK_FETCH_FROM_GIT_PATH}')")
++endif ()
++
++if (DEFINED ENV{PICO_SDK_FETCH_FROM_GIT_TAG} AND (NOT PICO_SDK_FETCH_FROM_GIT_TAG))
++    set(PICO_SDK_FETCH_FROM_GIT_TAG $ENV{PICO_SDK_FETCH_FROM_GIT_TAG})
++    message("Using PICO_SDK_FETCH_FROM_GIT_TAG from environment ('${PICO_SDK_FETCH_FROM_GIT_TAG}')")
++endif ()
++
++if (PICO_SDK_FETCH_FROM_GIT AND NOT PICO_SDK_FETCH_FROM_GIT_TAG)
++  set(PICO_SDK_FETCH_FROM_GIT_TAG "master")
++  message("Using master as default value for PICO_SDK_FETCH_FROM_GIT_TAG")
++endif()
++
++set(PICO_SDK_PATH "${PICO_SDK_PATH}" CACHE PATH "Path to the Raspberry Pi Pico SDK")
++set(PICO_SDK_FETCH_FROM_GIT "${PICO_SDK_FETCH_FROM_GIT}" CACHE BOOL "Set to ON to fetch copy of SDK from git if not otherwise locatable")
++set(PICO_SDK_FETCH_FROM_GIT_PATH "${PICO_SDK_FETCH_FROM_GIT_PATH}" CACHE FILEPATH "location to download SDK")
++set(PICO_SDK_FETCH_FROM_GIT_TAG "${PICO_SDK_FETCH_FROM_GIT_TAG}" CACHE FILEPATH "release tag for SDK")
++
++if (NOT PICO_SDK_PATH)
++    if (PICO_SDK_FETCH_FROM_GIT)
++        include(FetchContent)
++        set(FETCHCONTENT_BASE_DIR_SAVE ${FETCHCONTENT_BASE_DIR})
++        if (PICO_SDK_FETCH_FROM_GIT_PATH)
++            get_filename_component(FETCHCONTENT_BASE_DIR "${PICO_SDK_FETCH_FROM_GIT_PATH}" REALPATH BASE_DIR "${CMAKE_SOURCE_DIR}")
++        endif ()
++        # GIT_SUBMODULES_RECURSE was added in 3.17
++        if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17.0")
++            FetchContent_Declare(
++                    pico_sdk
++                    GIT_REPOSITORY https://github.com/raspberrypi/pico-sdk
++                    GIT_TAG ${PICO_SDK_FETCH_FROM_GIT_TAG}
++                    GIT_SUBMODULES_RECURSE FALSE
++            )
++        else ()
++            FetchContent_Declare(
++                    pico_sdk
++                    GIT_REPOSITORY https://github.com/raspberrypi/pico-sdk
++                    GIT_TAG ${PICO_SDK_FETCH_FROM_GIT_TAG}
++            )
++        endif ()
++
++        if (NOT pico_sdk)
++            message("Downloading Raspberry Pi Pico SDK")
++            FetchContent_Populate(pico_sdk)
++            set(PICO_SDK_PATH ${pico_sdk_SOURCE_DIR})
++        endif ()
++        set(FETCHCONTENT_BASE_DIR ${FETCHCONTENT_BASE_DIR_SAVE})
++    else ()
++        message(FATAL_ERROR
++                "SDK location was not specified. Please set PICO_SDK_PATH or set PICO_SDK_FETCH_FROM_GIT to on to fetch from git."
++                )
++    endif ()
++endif ()
++
++get_filename_component(PICO_SDK_PATH "${PICO_SDK_PATH}" REALPATH BASE_DIR "${CMAKE_BINARY_DIR}")
++if (NOT EXISTS ${PICO_SDK_PATH})
++    message(FATAL_ERROR "Directory '${PICO_SDK_PATH}' not found")
++endif ()
++
++set(PICO_SDK_INIT_CMAKE_FILE ${PICO_SDK_PATH}/pico_sdk_init.cmake)
++if (NOT EXISTS ${PICO_SDK_INIT_CMAKE_FILE})
++    message(FATAL_ERROR "Directory '${PICO_SDK_PATH}' does not appear to contain the Raspberry Pi Pico SDK")
++endif ()
++
++set(PICO_SDK_PATH ${PICO_SDK_PATH} CACHE PATH "Path to the Raspberry Pi Pico SDK" FORCE)
++
++include(${PICO_SDK_INIT_CMAKE_FILE})
+diff --git a/src/runtime/config-raspberry-pico.h b/src/runtime/config-raspberry-pico.h
+new file mode 100644
+index 0000000..7705e76
+--- /dev/null
++++ b/src/runtime/config-raspberry-pico.h
+@@ -0,0 +1,142 @@
++#ifndef CONFIG_RASPERRYPICO_H
++#define CONFIG_RASPERRYPICO_H
++/*
++ * Various platform specific configuration.
++ */
++
++/*
++ * Include stdio functions.
++ * Without this none of the file I/O in System.IO is available.
++ */
++#define WANT_STDIO 0
++
++/*
++ * Include ops for floating point arithmetic.
++ * Without this +,-,* etc will not be available for the Double type.
++ */
++#define WANT_FLOAT 0
++
++/*
++ * Include <math.h>
++ * Without this, exp,sin, etc are not available.
++ */
++#define WANT_MATH 0
++
++/*
++ * Include MD5 checksumming code
++ */
++#define WANT_MD5 0
++
++/*
++ * Include profiling code
++ */
++#define WANT_TICK 0
++
++/*
++ * Process argc, argv
++ */
++#define WANT_ARGS 0
++
++/*
++ * Number of bits in a word.  Only 32 and 64 are supported.
++ */
++// #define WORD_SIZE 16
++
++/*
++ * Find First Set
++ * This macro must be defined.
++ * It return the number of the least significant bit that is set.
++ * Numberings starts from 1.  If no bit is set, it should return 0.
++ */
++// #define FFS
++
++/*
++ * This is the character used for comma-separation in printf.
++ * Defaults to "'".
++ */
++/* #define PCOMMA "'" */
++
++/*
++ * Get a raw input character.
++ * If undefined, the default always returns -1
++ */
++/* #define GETRAW */
++
++/*
++ * Get time since some epoch in milliseconds.
++ */
++/* #define GETTIMEMILLI */
++
++/*
++ * The ERR macro should report an error and exit.
++ * If not defined, a generic one will be used.
++ */
++/* #define ERR(s) */
++/* #define ERR1(s,a) */
++
++#define GCRED 0    /* do some reductions during GC */
++#define FASTTAGS 0 /* compute tag by pointer subtraction */
++#define INTTABLE 0 /* use fixed table of small INT nodes */
++#define SANITY 0   /* do some sanity checks */
++#define STACKOVL 0 /* check for stack overflow */
++
++#define HEAP_CELLS 4000
++#define STACK_SIZE 500
++
++#define HASHBITS 9
++
++#define F_CPU 16000000UL
++
++#include "pico/stdlib.h"
++#include <stdio.h>
++
++// Turn the led on or off
++void pico_set_led(bool led_on) {
++#if defined(PICO_DEFAULT_LED_PIN)
++  // Just set the GPIO on or off
++  gpio_put(PICO_DEFAULT_LED_PIN, led_on);
++#endif
++}
++
++#define INITIALIZATION
++void main_setup(void) {
++  stdio_init_all();
++#ifdef PICO_DEFAULT_LED_PIN
++  gpio_init(PICO_DEFAULT_LED_PIN);
++  gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
++#endif
++  for (int i = 0; i < 10; i++) {
++    printf("Starting\n");
++    pico_set_led(true);
++    sleep_ms(100);
++    pico_set_led(false);
++    sleep_ms(100);
++  }
++}
++
++void set_led(int on) {
++  if (on == 0) {
++    pico_set_led(false);
++  } else {
++    pico_set_led(true);
++  }
++}
++
++void delay_ms(int ms) { sleep_ms(ms); }
++
++void myexit(int n) {
++  while (true) {
++    pico_set_led(true);
++    sleep_ms(250);
++    pico_set_led(false);
++    sleep_ms(250);
++    printf("Finished\n");
++  }
++}
++#define EXIT myexit
++
++#define FFI_EXTRA                                                              \
++  {"set_led", (funptr_t)set_led, FFI_IIV},                                     \
++      {"dealy_ms", (funptr_t)busy_wait, FFI_IV},
++
++#endif /* CONFIG_ARDUINOUNO_H */
+diff --git a/src/runtime/eval-raspberry-pico.c b/src/runtime/eval-raspberry-pico.c
+new file mode 100644
+index 0000000..7d2e57b
+--- /dev/null
++++ b/src/runtime/eval-raspberry-pico.c
+@@ -0,0 +1,3 @@
++#include "config-raspberry-pico.h"
++
++#include "eval.c"
+diff --git a/src/runtime/mhsffi.h b/src/runtime/mhsffi.h
+index cc510a5..b9fad96 100644
+--- a/src/runtime/mhsffi.h
++++ b/src/runtime/mhsffi.h
+@@ -1,3 +1,5 @@
++#ifndef MHSFFI_H
++#define MHSFFI_H
+ #include <inttypes.h>
+ #include <stdlib.h>
+ #include <time.h>
+@@ -77,3 +79,6 @@ time_t             mhs_to_CTime(intptr_t, int); /* XXX wrong */
+ // ssize_t            mhs_to_CSSize(intptr_t, int);
+ intptr_t           mhs_to_CIntPtr(intptr_t, int);
+ uintptr_t          mhs_to_CUIntPtr(intptr_t, int);
++
++
++#endif /* MHSFFI_H */

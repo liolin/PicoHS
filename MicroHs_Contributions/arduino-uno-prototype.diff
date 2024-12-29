@@ -1,0 +1,252 @@
+diff --git a/boards/ArduinoUno/.gitignore b/boards/ArduinoUno/.gitignore
+new file mode 100644
+index 0000000..d845918
+--- /dev/null
++++ b/boards/ArduinoUno/.gitignore
+@@ -0,0 +1,2 @@
++*.c
++build/
+diff --git a/boards/ArduinoUno/Blinky.hs b/boards/ArduinoUno/Blinky.hs
+new file mode 100644
+index 0000000..455c260
+--- /dev/null
++++ b/boards/ArduinoUno/Blinky.hs
+@@ -0,0 +1,36 @@
++module Blinky(main) where
++import Prelude
++
++main :: IO ()
++main = blinky (500::Int)
++
++blinky :: Int -> IO ()
++blinky n | n > 1000 = return ()
++blinky n = do
++  oneByOne n True
++  oneByOne n False
++  blinky (n + 1)
++
++oneByOne :: Int -> Bool -> IO ()
++oneByOne n on = forM_ [0..3] $ \ led -> do
++  setLed on
++  wait (n + led)
++
++foreign import ccall "set_led" set_led :: Int -> IO ()
++foreign import ccall "delay_ms" delay_ms :: Int -> IO ()
++
++
++setLed :: Bool -> IO ()
++setLed on = set_led $ if on then 1 else 0
++
++wait :: Int -> IO ()
++wait n = delay_ms (n*300)
++
++loop :: Int -> ()
++loop n = if n == 0 then () else loop (n - 1)
++
++
++forM_ = flip mapM_
++
++mapM_ f = foldr c (return ())
++  where c x k = f x >> k
+diff --git a/boards/ArduinoUno/README.md b/boards/ArduinoUno/README.md
+new file mode 100644
+index 0000000..d91a75d
+--- /dev/null
++++ b/boards/ArduinoUno/README.md
+@@ -0,0 +1,22 @@
++# Blinky for arduino uno
++
++## How to build blinky
++First build `mhs`, `mhseval` and `Addcombs` from the root directory.
++Copy `Blinky.hs` to the MicroHs root dir and run:
++```sh
++bin/mhs Blinky -z -oblinky_compress.c
++```
++
++Copy `blinky_compress.c` to `src/runtime/`
++Change directory to `boards/ArduinoUno/`
++and run (does not work yet)
++```sh
++avr-gcc -mmcu=atmega328p -Os -o build/blinky.elf ./run.c
++avr-objcopy -j .text -j .data -O ihex build/blinky.elf build/blinky.hex
++
++```
++
++And upload:
++```sh
++avrdude -c arduino -p m328p -P /dev/ttyACM0 -b 115200 -U flash:w:build/blink.hex
++```
+diff --git a/src/runtime/config-arduinouno.h b/src/runtime/config-arduinouno.h
+new file mode 100644
+index 0000000..b28e415
+--- /dev/null
++++ b/src/runtime/config-arduinouno.h
+@@ -0,0 +1,126 @@
++#ifndef CONFIG_ARDUINOUNO_H
++#define CONFIG_ARDUINOUNO_H
++/*
++ * Various platform specific configuration.
++ */
++
++/*
++ * Include stdio functions.
++ * Without this none of the file I/O in System.IO is available.
++ */
++#define WANT_STDIO 0
++
++/*
++ * Include ops for floating point arithmetic.
++ * Without this +,-,* etc will not be available for the Double type.
++ */
++#define WANT_FLOAT 0
++
++/*
++ * Include <math.h>
++ * Without this, exp,sin, etc are not available.
++ */
++#define WANT_MATH 0
++
++/*
++ * Include MD5 checksumming code
++ */
++#define WANT_MD5 0
++
++/*
++ * Include profiling code
++ */
++#define WANT_TICK 0
++
++/*
++ * Process argc, argv
++ */
++#define WANT_ARGS 0
++
++/*
++ * Number of bits in a word.  Only 32 and 64 are supported.
++ */
++// #define WORD_SIZE 16
++
++/*
++ * Find First Set
++ * This macro must be defined.
++ * It return the number of the least significant bit that is set.
++ * Numberings starts from 1.  If no bit is set, it should return 0.
++ */
++// #define FFS
++
++/*
++ * This is the character used for comma-separation in printf.
++ * Defaults to "'".
++ */
++/* #define PCOMMA "'" */
++
++/*
++ * Get a raw input character.
++ * If undefined, the default always returns -1
++ */
++/* #define GETRAW */
++
++/*
++ * Get time since some epoch in milliseconds.
++ */
++/* #define GETTIMEMILLI */
++
++/*
++ * The ERR macro should report an error and exit.
++ * If not defined, a generic one will be used.
++ */
++/* #define ERR(s) */
++/* #define ERR1(s,a) */
++
++#define GCRED 0    /* do some reductions during GC */
++#define FASTTAGS 0 /* compute tag by pointer subtraction */
++#define INTTABLE 0 /* use fixed table of small INT nodes */
++#define SANITY 0   /* do some sanity checks */
++#define STACKOVL 0 /* check for stack overflow */
++
++#define HEAP_CELLS 4000
++#define STACK_SIZE 500
++
++#define HASHBITS 9
++
++#define F_CPU 16000000UL
++
++#include <avr/io.h>     //defines pins, ports etc
++#include <util/delay.h> //functions for wasting time
++
++#define INITIALIZATION
++void main_setup(void) {
++  DDRB |= (1 << PB5); // Data Direction Register B:
++}
++
++void set_led(int on) {
++  if (on) {
++    PORTB = 0b00100000; // turn on 5th LED bit/pin in PORT B (Pin13 in Arduino)
++  } else {
++    PORTB = 0b00000000; // turn off all bits/pins on PB
++  }
++}
++
++void delay_ms(int ms) { _delay_ms(1000); }
++/* void delay_ms(int ms) { _delay_ms(ms); } */
++
++/* Instead of exit()ing, flash the green LED on exit code 0 else the red */
++void myexit(int n) { set_led(n == 0 ? 0 : 1); }
++#define EXIT myexit
++
++/* int ffs(uintptr_t x) { */
++/*   if (!x) */
++/*     return 0; */
++/*   x &= -x;          /\* keep lowest bit *\/ */
++/*   int i = __CLZ(x); /\* count leading 0s *\/ */
++/*   return 32 - i;    /\* 31 leading zeros should return 1 *\/ */
++/* } */
++/* #define FFS ffs */
++
++#define FFI_EXTRA                                                              \
++  {"set_led", (funptr_t)set_led, FFI_IIV},                                     \
++      {"dealy_ms", (funptr_t)busy_wait, FFI_IV},
++
++#endif /* CONFIG_ARDUINOUNO_H */
+diff --git a/src/runtime/eval-arduinouno.c b/src/runtime/eval-arduinouno.c
+new file mode 100644
+index 0000000..18be52d
+--- /dev/null
++++ b/src/runtime/eval-arduinouno.c
+@@ -0,0 +1,6 @@
++/* Copyright 2023 Lennart Augustsson
++ * See LICENSE file for full license.
++ */
++#include "config-arduinouno.h"
++
++#include "eval.c"
+diff --git a/src/runtime/lz77.c b/src/runtime/lz77.c
+index 75d2161..734f089 100644
+--- a/src/runtime/lz77.c
++++ b/src/runtime/lz77.c
+@@ -72,7 +72,9 @@ lz77d(uint8_t *src, size_t srclen, uint8_t **bufp)
+   return outoffs;
+ }
+ 
++#ifndef HASHBITS
+ #define HASHBITS 11
++#endif
+ #define HASHSIZE (1 << HASHBITS)
+ typedef size_t lzhash_t;
+ static INLINE lzhash_t
+diff --git a/src/runtime/mhsffi.h b/src/runtime/mhsffi.h
+index cc510a5..7fd914c 100644
+--- a/src/runtime/mhsffi.h
++++ b/src/runtime/mhsffi.h
+@@ -1,3 +1,5 @@
++#ifndef MHSFFI_H
++#define MHSFFI_H
+ #include <inttypes.h>
+ #include <stdlib.h>
+ #include <time.h>
+@@ -77,3 +79,5 @@ time_t             mhs_to_CTime(intptr_t, int); /* XXX wrong */
+ // ssize_t            mhs_to_CSSize(intptr_t, int);
+ intptr_t           mhs_to_CIntPtr(intptr_t, int);
+ uintptr_t          mhs_to_CUIntPtr(intptr_t, int);
++
++#endif /* MHSFFI_H */
