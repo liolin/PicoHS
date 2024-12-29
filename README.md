@@ -1,5 +1,5 @@
 # PicoHs
-Support files to develop an MicroHs application for the Raspberry Pi Go.
+A line following algorithm implement with MicroHs for the Raspberry Pi Go powered by a Raspberry Pi Pico.
 
 ## Building the project
 To compile the application the following build tools must be installed (package names from Arch Linux):
@@ -9,35 +9,50 @@ arm-none-eabi-gcc
 arm-none-eabi-newlib
 ```
 
-After installing the required tools, clone the repository and change into it.
+### Raspberry Pi Pico 2040
 To build the application for the Raspberry Pi Pico 2040 run the following commands:
 ```sh
 cmake -B build
 cmake --build build
 ```
-To copy the application on the Pico, press the `BOOTSEL` button while powering on.
+
+### Raspberry Pi Pico 2040 W
+To build the application for the Raspberry Pi Pico W run the following commands:
+```sh
+cmake -B build -DPICO_BOARD=pico_w -DWIFI_SSID="Your Network" -DWIFI_PASSWORD="Your Password"
+cmake --build build
+```
+
+### Raspberry Pi Pico 2350
+To build the application for the Raspberry Pi Pico 2350 run the following commands:
+```sh
+cmake -B build -DPICO_PLATFORM=rp2350
+cmake --build build
+```
+
+## Flashing
+To copy the application to the Pico, press the `BOOTSEL` button when switching on.
 This will mount the Pico as an USB device.
-Now you can copy the application to the Pico:
+You can now copy the application to the Pico:
 ```sh
 cp build/pico-go.uf2 <pico-mount-point>
 ```
 
-
-After changes to the source code it is enough to run `cmake --build build` again.
-In case you changed something in the cmake files, you have to run `cmake -B build` again followed by `cmake --build build`.
+After making changes to the source code, it is sufficient to execute `cmake --build build` again.
+If you have changed anything in the cmake files, you must execute `cmake -B build` (see build instructions for your platform) again, followed by `cmake --build build`.
 
 ## Monitor console / Debugging
-`PicoWrapper.hs` provides `print` and `printLn`.
+The module `PicoWrapper.hs` provides the functions `print` and `printLn`.
 These two functions can be used to log to the console.
-After you connected the Pico using USB to your PC, you can connect to the console using `minicom`:
+Once you have connected the Pico to your PC via USB, you can use `minicom` to connect to the Pico's console:
 ```sh
 minicom -b 115200 -o -D /dev/ttyACM0
 ```
 
 ## Run PicoGo
-1. Copy application to the PicoGo
+1. Copy the application to the PicoGo
 2. Unplug USB Cable
-3. Turn the PicoGo on (switch on the bottom side)
+3. Switch the PicoGo on (switch on the underside)
 
 
 ## Prototypes and contributions
