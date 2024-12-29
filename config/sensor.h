@@ -1,3 +1,6 @@
+#ifndef SENSOR_H
+#define SENSOR_H
+
 #include <stdio.h>
 #include <string.h>
 
@@ -116,7 +119,6 @@ uint16_t *read_line() {
   }
 
   _values[0] = _last_value;
-  for (int i = 0; i < 6; i++) {
-    printf("%d ", _values[i]);
-  }
 }
+
+#endif /* SENSOR_H */

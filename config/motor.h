@@ -1,3 +1,6 @@
+#ifndef MOTOR_H
+#define MOTOR_H
+
 #include "hardware/pwm.h"
 #include "pico/stdlib.h"
 
@@ -113,3 +116,5 @@ void set_motor(int left, int right) {
     pwm_set_chan_level(sliceB, PWM_CHAN_B, -(right * 0xFFFF / 100));
   }
 }
+
+#endif /* MOTOR_H */

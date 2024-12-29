@@ -1,7 +1,14 @@
 #ifndef CONFIG_RASPERRYPICO_H
 #define CONFIG_RASPERRYPICO_H
 
+#include <stdio.h>
 #include <stdlib.h>
+
+#include "pico/stdlib.h"
+
+#include "drive.h"
+#include "motor.h"
+#include "sensor.h"
 
 /*
  * Include stdio functions.
@@ -105,29 +112,19 @@
  */
 #define STACK_SIZE 500
 
-#define F_CPU 16000000UL
+#ifndef PICO_DEFAULT_LED_PIN
+#define PICO_DEFAULT_LED_PIN 25
+#endif /* PICO_DEFAULT_LED_PIN */
 
-#include "pico/stdlib.h"
-#include <stdio.h>
-
-#include "motor.h"
-#include "sensor.h"
-
-// Turn the led on or off
-void pico_set_led(bool led_on) {
-#if defined(PICO_DEFAULT_LED_PIN)
-  // Just set the GPIO on or off
-  gpio_put(PICO_DEFAULT_LED_PIN, led_on);
-#endif
-}
+void pico_set_led(bool led_on) { gpio_put(PICO_DEFAULT_LED_PIN, led_on); }
 
 #define INITIALIZATION
 void main_setup(void) {
+  set_sys_clock_khz(133000, true);
   stdio_init_all();
-#ifdef PICO_DEFAULT_LED_PIN
   gpio_init(PICO_DEFAULT_LED_PIN);
   gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
-#endif
+
   for (int i = 0; i < 10; i++) {
     printf("Starting\n");
     pico_set_led(true);
