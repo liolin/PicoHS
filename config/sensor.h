@@ -52,7 +52,7 @@ void init_sensor() {
   gpio_put(CS_PIN, 1);
   gpio_set_dir(CS_PIN, GPIO_OUT);
 
-  /* calibrate(); */
+  calibrate();
 }
 
 /*
@@ -93,19 +93,24 @@ void calibrate() {
       }
     }
   }
+
+  printf("calibrated_min: ");
+  print_arr(_calibrated_min, NUM_SENSORS);
+  printf("calibrated_max: ");
+  print_arr(_calibrated_max, NUM_SENSORS);
 }
 
 /*
  * sensor_values expected size is 5
  */
 void read_calibrated(uint16_t *sensor_values) {
-  uint16_t value = 0;
+  int32_t value = 0;
   analog_read(sensor_values);
 
   for (int i = 0; i < NUM_SENSORS; ++i) {
     uint16_t denominator = _calibrated_max[i] - _calibrated_min[i];
     if (denominator != 0) {
-      value = (sensor_values[i] - _calibrated_min[i]) * 1000 / denominator;
+      value = ((sensor_values[i] - _calibrated_min[i]) * 1000) / denominator;
     }
     if (value < 0) {
       value = 0;
@@ -119,7 +124,7 @@ void read_calibrated(uint16_t *sensor_values) {
   print_arr(sensor_values, NUM_SENSORS);
 }
 
-uint16_t *read_line() {
+uint16_t *read_line(int white_line) {
   // _values[0] is reserved for the position of the robot relative to the line
   uint16_t *sensor_values = _values + 1;
   read_calibrated(sensor_values);
@@ -128,12 +133,14 @@ uint16_t *read_line() {
   bool on_line = false;
   for (int i = 0; i < NUM_SENSORS; ++i) {
     uint16_t value = sensor_values[i];
-    /* if (white_line) */
-    /*   value = 1000 - value; */
+    if (white_line) {
+      value = 1000 - value;
+    }
 
     // keep track of whether we see the line at all
-    if (value < 800)
+    if (value < 800) {
       on_line = true;
+    }
 
     // only average in values that are above a noise threshold
     if (value > 50) {
@@ -175,7 +182,6 @@ uint16_t *read_line() {
 
   printf("read_line: ");
   print_arr(_values, NUM_SENSORS + 1);
-  printf("\n\n\n");
 }
 
 #endif /* SENSOR_H */

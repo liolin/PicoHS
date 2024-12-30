@@ -20,23 +20,19 @@ init = do
   PW.printLn "Init Application"
   PW.gpioInit defaultLedPin
   PW.gpioSetDir defaultLedPin PW.Out
+  PW.sleepMs 5000
 
   motor <- initMotor
   sensor <- initSensor
-  forward motor 10
-  PW.sleepMs 1000
-  stop motor
-
   c_init_drive
-
   PW.printLn "Init Application Finished"
   return $ Car motor sensor
 
 appLoop :: Car -> IO ()
 appLoop car@(Car motor sensor) = do
-  (position, sensorValues) <- readLine sensor
+  (position, sensorValues) <- readLine sensor Black
   c_one_iteration
-
+  -- PW.sleepMs 5000
   appLoop car
 
 setLed :: Bool -> IO ()

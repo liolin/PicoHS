@@ -1,5 +1,6 @@
 module Sensor
   ( Sensor
+  , LineColor(..)
   , initSensor
   , readLine
   ) where
@@ -10,6 +11,7 @@ import qualified PicoWrapper as PW
 
 
 data Sensor = Sensor
+data LineColor = Black | White
 
 initSensor :: IO Sensor
 initSensor = do
@@ -17,11 +19,15 @@ initSensor = do
   c_init_sensor
   return Sensor
 
-readLine :: Sensor -> IO (Word16, [Word16])
-readLine _ = do
-  ptr <- c_read_line >>= newForeignPtr_
+readLine :: Sensor -> LineColor -> IO (Word16, [Word16])
+readLine _ color = do
+  ptr <- c_read_line (isWhiteLine color) >>= newForeignPtr_
   xs <- withForeignPtr ptr myPeek
   return (head xs, tail xs)
+
+isWhiteLine :: LineColor -> Int
+isWhiteLine White = 1
+isWhiteLine Black = 0
 
 myPeek :: Ptr Word16 -> IO [Word16]
 myPeek p1 = do
@@ -39,5 +45,5 @@ myPeek p1 = do
   return [v1, v2, v3, v4, v5, v6]
 
 foreign import ccall "init_sensor" c_init_sensor :: IO ()
-foreign import ccall "read_line"   c_read_line   :: IO (Ptr Word16)
+foreign import ccall "read_line"   c_read_line   :: Int -> IO (Ptr Word16)
 
