@@ -96,23 +96,19 @@ void set_motor(int left, int right) {
     gpio_put(AIN1, true);
     gpio_put(AIN2, false);
     pwm_set_chan_level(sliceA, PWM_CHAN_A, (left * 0xFFFF / 100));
-  }
-
-  if (left < 0 && left >= -100) {
+  } else if (left < 0 && left >= -100) {
     gpio_put(AIN1, false);
     gpio_put(AIN2, true);
     pwm_set_chan_level(sliceA, PWM_CHAN_A, -(left * 0xFFFF / 100));
   }
 
   if (right >= 0 && right <= 100) {
-    gpio_put(BIN1, true);
-    gpio_put(BIN2, false);
-    pwm_set_chan_level(sliceB, PWM_CHAN_B, (right * 0xFFFF / 100));
-  }
-
-  if (right < 0 && right >= -100) {
     gpio_put(BIN1, false);
     gpio_put(BIN2, true);
+    pwm_set_chan_level(sliceB, PWM_CHAN_B, (right * 0xFFFF / 100));
+  } else if (right < 0 && right >= -100) {
+    gpio_put(BIN1, true);
+    gpio_put(BIN2, false);
     pwm_set_chan_level(sliceB, PWM_CHAN_B, -(right * 0xFFFF / 100));
   }
 }
