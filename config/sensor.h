@@ -131,6 +131,7 @@ uint16_t *read_line(int white_line) {
   double avg = 0;
   double sum = 0;
   bool on_line = false;
+
   for (int i = 0; i < NUM_SENSORS; ++i) {
     uint16_t value = sensor_values[i];
     if (white_line) {
@@ -138,6 +139,7 @@ uint16_t *read_line(int white_line) {
     }
 
     // keep track of whether we see the line at all
+    // TODO: Python code has value > 200
     if (value < 800) {
       on_line = true;
     }
@@ -148,6 +150,7 @@ uint16_t *read_line(int white_line) {
       sum += value;                    // this is for the denominator
     }
   }
+  printf("On line: %d", on_line);
 
   if (on_line) {
     _successive_not_on_line = 0;
