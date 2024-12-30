@@ -22,10 +22,23 @@ uint _max_fails = 20;
 uint16_t _last_value = 0;
 uint16_t _calibrated_min[5] = {117, 129, 124, 127, 101};
 uint16_t _calibrated_max[5] = {841, 899, 925, 945, 823};
+// [0] position
+// [1..5] sensor values
 uint16_t *_values = 0;
 
+void calibrate();
+
+void print_arr(uint16_t *values, size_t size) {
+  for (size_t i = 0; i < size; i++) {
+    printf("%d ", values[i]);
+  }
+  printf("\n");
+}
+
 void init_sensor() {
-  _values = malloc(sizeof(uint16_t) * 6);
+  _values = malloc(sizeof(uint16_t) * (NUM_SENSORS + 1));
+  // spi_cpha0_program is an PIO programm defined in spi.pio.
+  // In spi.pio its called spi_cpha0
   uint offset = pio_add_program(PIO0, &spi_cpha0_program);
   _sm = pio_claim_unused_sm(PIO0, true);
 
@@ -38,46 +51,83 @@ void init_sensor() {
   gpio_init(CS_PIN);
   gpio_put(CS_PIN, 1);
   gpio_set_dir(CS_PIN, GPIO_OUT);
+
+  /* calibrate(); */
 }
 
-void analog_read(uint16_t *returnValues) {
-  uint16_t value[NUM_SENSORS + 1] = {0};
+/*
+ * returnValues expected size is 5.
+ */
+void analog_read(uint16_t *return_values) {
+  // the first read returns garbage
+  uint16_t values[NUM_SENSORS + 1] = {0};
   uint offset = 0;
   for (uint32_t i = offset; i < offset + NUM_SENSORS + 1; ++i) {
     gpio_put(CS_PIN, 0);
     pio_sm_put_blocking(PIO0, _sm, i << 28);
-    value[i - offset] = pio_sm_get_blocking(PIO0, _sm) & 0xfff;
+    values[i - offset] = pio_sm_get_blocking(PIO0, _sm) & 0xfff;
     gpio_put(CS_PIN, 1);
-    value[i - offset] >>= 2;
+    values[i - offset] >>= 2;
     busy_wait_us(50);
   }
-
-  memcpy(returnValues, value, NUM_SENSORS);
+  printf("analog_read: ");
+  print_arr(values + 1, NUM_SENSORS);
+  memcpy(return_values, values + 1, sizeof(uint16_t) * NUM_SENSORS);
 }
 
+void calibrate() {
+  for (size_t i = 0; i < NUM_SENSORS; i++) {
+    _calibrated_min[i] = 1023;
+    _calibrated_max[i] = 0;
+  }
+  uint16_t sensor_values[6] = {0};
+
+  for (size_t j = 0; j < 10; j++) {
+    analog_read(sensor_values);
+    for (size_t i = 0; i < NUM_SENSORS; i++) {
+      if (_calibrated_max[i] < sensor_values[i] && sensor_values[i] != 0) {
+        _calibrated_max[i] = sensor_values[i];
+      }
+      if (_calibrated_min[i] > sensor_values[i] && sensor_values[i] != 0) {
+        _calibrated_min[i] = sensor_values[i];
+      }
+    }
+  }
+}
+
+/*
+ * sensor_values expected size is 5
+ */
 void read_calibrated(uint16_t *sensor_values) {
   uint16_t value = 0;
   analog_read(sensor_values);
 
   for (int i = 0; i < NUM_SENSORS; ++i) {
     uint16_t denominator = _calibrated_max[i] - _calibrated_min[i];
-    if (denominator != 0)
+    if (denominator != 0) {
       value = (sensor_values[i] - _calibrated_min[i]) * 1000 / denominator;
-    if (value < 0)
+    }
+    if (value < 0) {
       value = 0;
-    else if (value > 1000)
+    } else if (value > 1000) {
       value = 1000;
+    }
     sensor_values[i] = (uint16_t)value;
   }
+
+  printf("read_calibrated: ");
+  print_arr(sensor_values, NUM_SENSORS);
 }
 
 uint16_t *read_line() {
-  read_calibrated(_values + 1);
+  // _values[0] is reserved for the position of the robot relative to the line
+  uint16_t *sensor_values = _values + 1;
+  read_calibrated(sensor_values);
   double avg = 0;
-  double sum1 = 0;
+  double sum = 0;
   bool on_line = false;
   for (int i = 0; i < NUM_SENSORS; ++i) {
-    uint16_t value = _values[i];
+    uint16_t value = sensor_values[i];
     /* if (white_line) */
     /*   value = 1000 - value; */
 
@@ -86,17 +136,20 @@ uint16_t *read_line() {
       on_line = true;
 
     // only average in values that are above a noise threshold
-    if (value > 50)
+    if (value > 50) {
       avg += value * ((i + 1) * 1000); // this is for the weighted total,
-    sum1 += value;                     // this is for the denominator
+      sum += value;                    // this is for the denominator
+    }
   }
 
-  if (on_line)
+  if (on_line) {
     _successive_not_on_line = 0;
-  else
+  } else {
     _successive_not_on_line++;
-  if (_successive_not_on_line >= _max_fails)
+  }
+  if (_successive_not_on_line >= _max_fails) {
     _successive_not_on_line = _max_fails;
+  }
 
   if (_successive_not_on_line >= _max_fails) {
     // std::cout << "not on line" << std::endl;
@@ -114,11 +167,15 @@ uint16_t *read_line() {
 
   if (on_line) {
     // std::cout << "on line" << std::endl;
-    if (sum1 != 0)
-      _last_value = (uint16_t)(avg / sum1);
+    if (sum != 0)
+      _last_value = (uint16_t)(avg / sum);
   }
 
   _values[0] = _last_value;
+
+  printf("read_line: ");
+  print_arr(_values, NUM_SENSORS + 1);
+  printf("\n\n\n");
 }
 
 #endif /* SENSOR_H */
