@@ -19,8 +19,7 @@ if (DEFINED ENV{MICROHS_FETCH_FROM_GIT_TAG} AND (NOT MICROHS_FETCH_FROM_GIT_TAG)
 endif ()
 
 if (MICROHS_FETCH_FROM_GIT AND NOT MICROHS_FETCH_FROM_GIT_TAG)
-  set(MICROHS_FETCH_FROM_GIT_TAG "fix-mhs_from_Unit-generation")
-  # set(MICROHS_FETCH_FROM_GIT_TAG "master")
+  set(MICROHS_FETCH_FROM_GIT_TAG "master")
   message("Using master as default value for MICROHS_FETCH_FROM_GIT_TAG")
 endif()
 
@@ -40,14 +39,14 @@ if (NOT MICROHS_PATH)
         if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.17.0")
             FetchContent_Declare(
                     microhs
-                    GIT_REPOSITORY https://github.com/liolin/MicroHs/
+                    GIT_REPOSITORY https://github.com/augustss/MicroHs/
                     GIT_TAG ${MICROHS_FETCH_FROM_GIT_TAG}
                     GIT_SUBMODULES_RECURSE FALSE
             )
         else ()
             FetchContent_Declare(
                     microhs
-                    GIT_REPOSITORY https://github.com/liolin/MicroHs/
+                    GIT_REPOSITORY https://github.com/augustss/MicroHs/
                     GIT_TAG ${MICROHS_FETCH_FROM_GIT_TAG}
             )
         endif ()

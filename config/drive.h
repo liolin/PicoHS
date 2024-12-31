@@ -34,10 +34,6 @@ void one_iteration() {
     sensor_sum += sensor_values[i];
   }
 
-  printf("position: %d\n", position);
-  printf("sensor values: ");
-  print_arr(sensor_values, NUM_SENSORS);
-
   // Python: sensor_sum > 4000
   if (sensor_sum > 5000) {
     stop();

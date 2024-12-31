@@ -23,7 +23,7 @@ void print_int(int number);
  * Include ops for floating point arithmetic.
  * Without this +,-,* etc will not be available for the Double type.
  */
-#define WANT_FLOAT 0
+#define WANT_FLOAT 1
 
 /*
  * Include <math.h>

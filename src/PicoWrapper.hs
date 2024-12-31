@@ -24,7 +24,7 @@ module PicoWrapper
   , sleepMs
   , stdioInitAll
   ) where
-import Prelude
+import Prelude hiding (print)
 import Pico
 import Foreign (Ptr)
 import Foreign.C.String
