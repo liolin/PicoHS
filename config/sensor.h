@@ -28,12 +28,10 @@ uint16_t *_values = 0;
 
 void calibrate();
 
-void print_arr(uint16_t *values, size_t size) {
-  for (size_t i = 0; i < size; i++) {
-    printf("%d ", values[i]);
-  }
-  printf("\n");
-}
+/*
+ * This function is used by Haskell code to get the values from _values.
+ */
+int get_value_with_ptr(uint16_t *ptr, int index) { return (int)ptr[index]; }
 
 void init_sensor() {
   _values = malloc(sizeof(uint16_t) * (NUM_SENSORS + 1));
@@ -70,8 +68,6 @@ void analog_read(uint16_t *return_values) {
     values[i - offset] >>= 2;
     busy_wait_us(50);
   }
-  printf("analog_read: ");
-  print_arr(values + 1, NUM_SENSORS);
   memcpy(return_values, values + 1, sizeof(uint16_t) * NUM_SENSORS);
 }
 
@@ -93,11 +89,6 @@ void calibrate() {
       }
     }
   }
-
-  printf("calibrated_min: ");
-  print_arr(_calibrated_min, NUM_SENSORS);
-  printf("calibrated_max: ");
-  print_arr(_calibrated_max, NUM_SENSORS);
 }
 
 /*
@@ -119,9 +110,6 @@ void read_calibrated(uint16_t *sensor_values) {
     }
     sensor_values[i] = (uint16_t)value;
   }
-
-  printf("read_calibrated: ");
-  print_arr(sensor_values, NUM_SENSORS);
 }
 
 uint16_t *read_line(int white_line) {
@@ -150,7 +138,6 @@ uint16_t *read_line(int white_line) {
       sum += value;                    // this is for the denominator
     }
   }
-  printf("On line: %d", on_line);
 
   if (on_line) {
     _successive_not_on_line = 0;
@@ -183,8 +170,10 @@ uint16_t *read_line(int white_line) {
 
   _values[0] = _last_value;
 
-  printf("read_line: ");
+  printf("Read from C:\t\t\t");
   print_arr(_values, NUM_SENSORS + 1);
+
+  return _values;
 }
 
 #endif /* SENSOR_H */

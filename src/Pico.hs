@@ -14,6 +14,7 @@ module Pico( c_gpio_init
 
            , c_stdio_init_all
            , c_printf
+           , c_print_int
            ) where
 import Prelude
 import Foreign(Ptr)
@@ -36,6 +37,8 @@ foreign import ccall "hardware/pwm.h pwm_set_chan_level"    c_pwm_set_chan_level
 
 foreign import ccall "pico/stdlib.h stdio_init_all" c_stdio_init_all    :: IO ()
 foreign import ccall "printf"                       c_printf            :: CString -> IO ()
+foreign import ccall "print_int"                    c_print_int         :: Int -> IO ()
+
 
 
 data PwmConfig = PwmConfig

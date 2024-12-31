@@ -6,6 +6,9 @@
 
 #include "pico/stdlib.h"
 
+void print_arr(uint16_t *values, size_t size);
+void print_int(int number);
+
 #include "drive.h"
 #include "motor.h"
 #include "sensor.h"
@@ -115,6 +118,19 @@
 #ifndef PICO_DEFAULT_LED_PIN
 #define PICO_DEFAULT_LED_PIN 25
 #endif /* PICO_DEFAULT_LED_PIN */
+
+/* TODO: For debugging purposes. Remove when finished */
+void print_arr(uint16_t *values, size_t size) {
+  for (size_t i = 0; i < size; i++) {
+    printf("%d ", values[i]);
+  }
+  printf("\n");
+}
+
+/* Printing number using Haskell causes an error. \
+ * Dig into this error later and create a pull request. \
+ */
+void print_int(int number) { printf("%d", number); }
 
 void pico_set_led(bool led_on) { gpio_put(PICO_DEFAULT_LED_PIN, led_on); }
 

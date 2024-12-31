@@ -1,6 +1,7 @@
 module PicoWrapper
   ( print
   , printLn
+  , printInt
   , GpioFunctionRp2040(..)
   , castGpioFunctionRp2040
   , GpioDirection(..)
@@ -38,6 +39,9 @@ print s = do
 
 printLn :: String -> IO ()
 printLn s = print $ s ++ "\n"
+
+printInt :: Int -> IO ()
+printInt = c_print_int
 
   
 

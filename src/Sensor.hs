@@ -6,6 +6,7 @@ module Sensor
   ) where
 import Prelude
 import Foreign
+import Control.Monad (mapM)
 
 import qualified PicoWrapper as PW
 
@@ -19,16 +20,32 @@ initSensor = do
   c_init_sensor
   return Sensor
 
-readLine :: Sensor -> LineColor -> IO (Word16, [Word16])
+readLine :: Sensor -> LineColor -> IO (Int, [Int])
 readLine _ color = do
   ptr <- c_read_line (isWhiteLine color) >>= newForeignPtr_
-  xs <- withForeignPtr ptr myPeek
+  PW.print "Read from Haskell:\t\t"
+  xs <- withForeignPtr ptr getReadLineValuesWithPtr >>= mapM (\v -> PW.printInt v >> PW.print " " >> return v)
+  PW.printLn ""
   return (head xs, tail xs)
 
 isWhiteLine :: LineColor -> Int
 isWhiteLine White = 1
 isWhiteLine Black = 0
 
+getReadLineValuesWithPtr :: Ptr Word16 -> IO [Int]
+getReadLineValuesWithPtr ptr = do
+  -- forM crashes with bad n, why?
+  -- forM [0..5] c_get_value
+  v0 <- c_get_value_with_ptr ptr 0
+  v1 <- c_get_value_with_ptr ptr 1
+  v2 <- c_get_value_with_ptr ptr 2
+  v3 <- c_get_value_with_ptr ptr 3
+  v4 <- c_get_value_with_ptr ptr 4
+  v5 <- c_get_value_with_ptr ptr 5
+  return [v0, v1, v2, v3, v4, v5]
+
+-- Reads wrong memory address.
+-- but why?, maybe wrong pointer size?
 myPeek :: Ptr Word16 -> IO [Word16]
 myPeek p1 = do
   v1 <- peek p1
@@ -44,6 +61,6 @@ myPeek p1 = do
   v6 <- peek p6
   return [v1, v2, v3, v4, v5, v6]
 
-foreign import ccall "init_sensor" c_init_sensor :: IO ()
-foreign import ccall "read_line"   c_read_line   :: Int -> IO (Ptr Word16)
-
+foreign import ccall "init_sensor"          c_init_sensor :: IO ()
+foreign import ccall "read_line"            c_read_line   :: Int -> IO (Ptr Word16)
+foreign import ccall "get_value_with_ptr"   c_get_value_with_ptr  :: Ptr Word16 -> Int -> IO Int
