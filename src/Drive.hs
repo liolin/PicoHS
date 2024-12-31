@@ -2,8 +2,7 @@ module Drive(main) where
 import Prelude
 import Data.Maybe(fromJust)
 import Data.Ord(clamp)
-import Pico
-import qualified PicoWrapper as PW
+import qualified Pico as P
 import Motor
 import Sensor
 
@@ -14,9 +13,6 @@ type Proportional = Int
 type Integ        = Int
 type Position     = Int
 type State        = (Proportional, Integ)
-
-defaultLedPin :: PW.GpioPin
-defaultLedPin = fromJust $ PW.parseGpioPin 25
 
 p :: Float
 p = 0.141477
@@ -38,15 +34,12 @@ main = initCar >>= \car -> appLoop car (0, 0)
 
 initCar :: IO Car
 initCar = do
-  PW.stdioInitAll
-  PW.printLn "Init Application"
-  PW.gpioInit defaultLedPin
-  PW.gpioSetDir defaultLedPin PW.Out
-  PW.sleepMs 5000
+  P.printLn "Init Application"
+  P.sleepMs 5000
 
   motor <- initMotor
   sensor <- initSensor
-  PW.printLn "Init Application Finished"
+  P.printLn "Init Application Finished"
   return $ Car motor sensor
 
 appLoop :: Car -> State -> IO ()
@@ -58,7 +51,7 @@ appLoop car@(Car motor sensor) st = do
   -- PW.print "Haskell: "
   -- PW.printInt (fst st')
   -- PW.printLn ""
-  PW.sleepMs 5000
+  P.sleepMs 5000
   appLoop car st
 
 update :: State -> Position -> (Int, State)
@@ -89,8 +82,5 @@ calcPowerDifference proportional derivative integral = prop + der + int
     prop = toInt $ fromIntegral proportional * p
     der = toInt $ fromIntegral derivative * d
     int  = toInt $ fromIntegral integral * i
-
-setLed :: Bool -> IO ()
-setLed = PW.gpioPut defaultLedPin
 
 foreign import ccall "one_iteration" c_one_iteration :: IO ()

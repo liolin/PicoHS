@@ -8,7 +8,7 @@ module Motor
   , stop
   ) where
 import Prelude
-import qualified PicoWrapper as PW
+import qualified Pico as P
 
 
 
@@ -16,7 +16,7 @@ data Motor = Motor
 
 initMotor :: IO Motor
 initMotor = do
-  PW.printLn "Start Init Motor"
+  P.printLn "Start Init Motor"
   c_init_motor
   return Motor
 

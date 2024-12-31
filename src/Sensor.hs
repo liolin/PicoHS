@@ -8,7 +8,7 @@ import Prelude
 import Foreign
 import Control.Monad (mapM)
 
-import qualified PicoWrapper as PW
+import qualified Pico as P
 
 
 data Sensor = Sensor
@@ -16,16 +16,16 @@ data LineColor = Black | White
 
 initSensor :: IO Sensor
 initSensor = do
-  PW.printLn "Init Sensor"
+  P.printLn "Init Sensor"
   c_init_sensor
   return Sensor
 
 readLine :: Sensor -> LineColor -> IO (Int, [Int])
 readLine _ color = do
   ptr <- c_read_line (isWhiteLine color) >>= newForeignPtr_
-  PW.print "Read from Haskell:\t\t"
-  xs <- withForeignPtr ptr getReadLineValuesWithPtr >>= mapM (\v -> PW.printInt v >> PW.print " " >> return v)
-  PW.printLn ""
+  P.print "Read from Haskell:\t\t"
+  xs <- withForeignPtr ptr getReadLineValuesWithPtr >>= mapM (\v -> P.printInt v >> P.print " " >> return v)
+  P.printLn ""
   return (head xs, tail xs)
 
 isWhiteLine :: LineColor -> Int
