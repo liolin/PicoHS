@@ -62,7 +62,8 @@ In order to learn how to build an application with MicroHs for an micro controll
 
 During the development of this project, issues and pull requests were created for MicroHs:
 - [Issue - mhs: error: no location: Not a valid C type: () #70 ](https://github.com/augustss/MicroHs/issues/70)
-- [Pull Request - Remove Primitives prefix](./MicroHs_Contributions/remove_Primitives_prefix.patch)
+- [Pull Request - Remove Primitives prefix](https://github.com/augustss/MicroHs/pull/76)
+- [Pull request - Implement clamp in Data.Ord](https://github.com/augustss/MicroHs/pull/78)
 
 
 To keep everything in one place, the diffs and patches are stored in the `MicroHs_Contributions` folder.
