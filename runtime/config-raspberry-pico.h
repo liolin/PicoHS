@@ -1,17 +1,9 @@
 #ifndef CONFIG_RASPERRYPICO_H
 #define CONFIG_RASPERRYPICO_H
 
-#include <stdio.h>
-#include <stdlib.h>
-
+#include "hardware/clocks.h"
 #include "pico/stdlib.h"
-
-void print_arr(uint16_t *values, size_t size);
-void print_int(int number);
-
-#include "drive.h"
-#include "motor.h"
-#include "sensor.h"
+#include <stdio.h>
 
 /*
  * Include stdio functions.
@@ -119,21 +111,6 @@ void print_int(int number);
 #define PICO_DEFAULT_LED_PIN 25
 #endif /* PICO_DEFAULT_LED_PIN */
 
-/* TODO: For debugging purposes. Remove when finished */
-void print_arr(uint16_t *values, size_t size) {
-  for (size_t i = 0; i < size; i++) {
-    printf("%d ", values[i]);
-  }
-  printf("\n");
-}
-
-/* Printing number using Haskell causes an error. \
- * Dig into this error later and create a pull request. \
- */
-void print_int(int number) { printf("%d", number); }
-
-void pico_set_led(bool led_on) { gpio_put(PICO_DEFAULT_LED_PIN, led_on); }
-
 #define INITIALIZATION
 void main_setup(void) {
   set_sys_clock_khz(133000, true);
@@ -143,9 +120,9 @@ void main_setup(void) {
 
   for (int i = 0; i < 10; i++) {
     printf("Starting\n");
-    pico_set_led(true);
+    gpio_put(PICO_DEFAULT_LED_PIN, true);
     sleep_ms(250);
-    pico_set_led(false);
+    gpio_put(PICO_DEFAULT_LED_PIN, false);
     sleep_ms(250);
   }
 }
@@ -153,4 +130,4 @@ void main_setup(void) {
 void myexit(int n) { printf("Finished with code: %d\n", n); }
 #define EXIT myexit
 
-#endif /* CONFIG_ARDUINOUNO_H */
+#endif /* CONFIG_RASPERRYPICO_H */

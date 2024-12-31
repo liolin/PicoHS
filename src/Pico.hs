@@ -26,4 +26,4 @@ sleepMs = c_sleep_ms
 
 foreign import ccall "pico/stdlib.h sleep_ms" c_sleep_ms  :: Int    -> IO ()
 foreign import ccall "printf"                 c_printf    :: CString -> IO ()
-foreign import ccall "print_int"              c_print_int :: Int -> IO ()
+foreign import ccall "helpers.h print_int"    c_print_int :: Int -> IO ()

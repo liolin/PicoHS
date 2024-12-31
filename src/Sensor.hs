@@ -61,6 +61,6 @@ myPeek p1 = do
   v6 <- peek p6
   return [v1, v2, v3, v4, v5, v6]
 
-foreign import ccall "init_sensor"          c_init_sensor :: IO ()
-foreign import ccall "read_line"            c_read_line   :: Int -> IO (Ptr Word16)
-foreign import ccall "get_value_with_ptr"   c_get_value_with_ptr  :: Ptr Word16 -> Int -> IO Int
+foreign import ccall "sensor.h init_sensor"          c_init_sensor :: IO ()
+foreign import ccall "sensor.h read_line"            c_read_line   :: Int -> IO (Ptr Word16)
+foreign import ccall "sensor.h get_value_with_ptr"   c_get_value_with_ptr  :: Ptr Word16 -> Int -> IO Int

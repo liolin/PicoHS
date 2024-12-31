@@ -39,10 +39,10 @@ setMotor :: Motor -> Int -> Int -> IO ()
 setMotor _ = c_set_motor
 
 
-foreign import ccall "initMotor" c_init_motor :: IO ()
-foreign import ccall "forward"   c_forward    :: Int -> IO ()
-foreign import ccall "backward"  c_backward   :: Int -> IO ()
-foreign import ccall "left"      c_left       :: Int -> IO ()
-foreign import ccall "right"     c_right      :: Int -> IO ()
-foreign import ccall "stop"      c_stop       :: IO ()
-foreign import ccall "set_motor" c_set_motor  :: Int -> Int -> IO ()
+foreign import ccall "motor.h initMotor" c_init_motor :: IO ()
+foreign import ccall "motor.h forward"   c_forward    :: Int -> IO ()
+foreign import ccall "motor.h backward"  c_backward   :: Int -> IO ()
+foreign import ccall "motor.h left"      c_left       :: Int -> IO ()
+foreign import ccall "motor.h right"     c_right      :: Int -> IO ()
+foreign import ccall "motor.h stop"      c_stop       :: IO ()
+foreign import ccall "motor.h set_motor" c_set_motor  :: Int -> Int -> IO ()

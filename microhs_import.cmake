@@ -75,14 +75,4 @@ if (NOT EXISTS ${MICROHS_MAKE_FILE})
 endif ()
 
 set(MICROHS_PATH ${MICROHS_PATH} CACHE PATH "Path to MicroHs" FORCE)
-
-
-# macro(microhs_init)
-#   if (NOT CMAKE_PROJECT_NAME)
-#       message(WARNING "pico_sdk_init() should be called after the project is created (and languages added)")
-#   endif()
-#   add_custom_command(OUTPUT ${MICROHS_PATH}/bin/mhs
-#     COMMAND make bin/mhs
-#     WORKING_DIRECTORY ${MICROHS_PATH}
-#   )
-# endmacro()
+set(MICROHS_RUNTIME_PATH ${MICROHS_PATH}/src/runtime CACHE PATH "Path to MicroHs' runtime folder" FORCE)

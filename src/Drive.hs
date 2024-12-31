@@ -1,6 +1,5 @@
 module Drive(main) where
 import Prelude
-import Data.Maybe(fromJust)
 import Data.Ord(clamp)
 import qualified Pico as P
 import Motor
@@ -45,12 +44,12 @@ initCar = do
 appLoop :: Car -> State -> IO ()
 appLoop car@(Car motor sensor) st = do
   (position, sensorValues) <- readLine sensor Black
-  c_one_iteration
-  -- let sensorSum = sum sensorValues
-  -- let st' = update st position
-  -- PW.print "Haskell: "
-  -- PW.printInt (fst st')
-  -- PW.printLn ""
+  -- c_one_iteration
+  let sensorSum = sum sensorValues
+  let st' = update st position
+  P.print "Haskell: "
+  -- P.printInt (fst st')
+  P.printLn "\n"
   P.sleepMs 5000
   appLoop car st
 
@@ -83,4 +82,4 @@ calcPowerDifference proportional derivative integral = prop + der + int
     der = toInt $ fromIntegral derivative * d
     int  = toInt $ fromIntegral integral * i
 
-foreign import ccall "one_iteration" c_one_iteration :: IO ()
+foreign import ccall "drive.h one_iteration" c_one_iteration :: IO ()
