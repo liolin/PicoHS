@@ -61,7 +61,6 @@ void one_iteration() {
     // apply values
     power_difference = proportional * p + derivative * d + integral * i;
     /* power_difference = proportional / 30 + derivative * 2; */
-    printf("power_difference: %d\n", power_difference);
 
     if (power_difference > maximum) {
       power_difference = maximum;
@@ -70,17 +69,16 @@ void one_iteration() {
     if (power_difference < -maximum) {
       power_difference = -maximum;
     }
+    printf("power_difference:\t\t%d, ", power_difference);
 
     if (power_difference < 0) {
       printf("%d, %d\n", maximum + power_difference, maximum);
-      set_motor(maximum + power_difference, maximum);
+      /* set_motor(maximum + power_difference, maximum); */
     } else {
       printf("%d, %d\n", maximum, maximum - power_difference);
-      set_motor(maximum, maximum - power_difference);
+      /* set_motor(maximum, maximum - power_difference); */
     }
   }
-
-  printf("\n\n\n");
 }
 
 #endif /* DRIVE_H */

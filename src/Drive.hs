@@ -31,28 +31,30 @@ startState = (0, 0)
 main :: IO ()
 main = initCar >>= \car -> appLoop car (0, 0)
 
+-- | Initialize the car by initializing the motor and the sensor.
+-- | It waits for 5s, so that the car can be placed on the floor before initialization starts.
 initCar :: IO Car
 initCar = do
   P.printLn "Init Application"
   P.sleepMs 5000
-
   motor <- initMotor
   sensor <- initSensor
   P.printLn "Init Application Finished"
   return $ Car motor sensor
 
+-- | The app loop: reading sensor values, calculating power for motors, setting motors, repeat.
 appLoop :: Car -> State -> IO ()
 appLoop car@(Car motor sensor) st = do
-  (position, sensorValues) <- readLine sensor Black
-  -- c_one_iteration
-  let sensorSum = sum sensorValues
-  let st' = update st position
-  P.print "Haskell: "
-  -- P.printInt (fst st')
-  P.printLn "\n"
-  P.sleepMs 5000
-  appLoop car st
+  (position, _) <- readLine sensor Black
+  let (pd, st') = update st position
+  uncurry (setMotor motor) (calcMotorConfig pd)
+  appLoop car st'
 
+-- | Calculates the motor config and returns it as a tuple (left motor, right motor).
+calcMotorConfig :: Int -> (Int, Int)
+calcMotorConfig pd = if pd < 0 then (maxSpeed + pd, maxSpeed) else (maxSpeed, maxSpeed - pd)
+
+-- | Updates the State and returns the power difference.
 update :: State -> Position -> (Int, State)
 update (prop, int) pos = (pd, (p, i))
   where
@@ -61,7 +63,7 @@ update (prop, int) pos = (pd, (p, i))
     i  = calcIntegral int p
     pd = calcPowerDifference p d i
 
--- | Calculates the proportional position from the given position
+-- | Calculates the proportional position from the given position.
 calcProportional :: Int -> Int
 calcProportional position = position - 3000
 
@@ -69,17 +71,15 @@ calcProportional position = position - 3000
 calcDerivative :: Int -> Int -> Int
 calcDerivative x0 x1 = x1 - x0
 
--- | Calculates the new integral from the old one with the given proportional position
+-- | Calculates the new integral from the old one with the given proportional position.
 calcIntegral :: Int -> Int -> Int
 calcIntegral x0 v = clamp (-5000, 5000) x0 + v
 
--- | Calculates the power difference for the motors
+-- | Calculates the power difference for the motors.
 calcPowerDifference :: Int -> Int -> Int -> Int
-calcPowerDifference proportional derivative integral = prop + der + int
+calcPowerDifference proportional derivative integral = clamp (-maxSpeed, maxSpeed) $ prop + der + int
   where
     toInt = fromInteger . truncate
     prop = toInt $ fromIntegral proportional * p
     der = toInt $ fromIntegral derivative * d
     int  = toInt $ fromIntegral integral * i
-
-foreign import ccall "drive.h one_iteration" c_one_iteration :: IO ()

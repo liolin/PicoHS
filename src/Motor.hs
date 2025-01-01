@@ -6,6 +6,7 @@ module Motor
   , left
   , right
   , stop
+  , setMotor
   ) where
 import Prelude
 import qualified Pico as P

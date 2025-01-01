@@ -33,16 +33,7 @@ isWhiteLine White = 1
 isWhiteLine Black = 0
 
 getReadLineValuesWithPtr :: Ptr Word16 -> IO [Int]
-getReadLineValuesWithPtr ptr = do
-  -- forM crashes with bad n, why?
-  -- forM [0..5] c_get_value
-  v0 <- c_get_value_with_ptr ptr 0
-  v1 <- c_get_value_with_ptr ptr 1
-  v2 <- c_get_value_with_ptr ptr 2
-  v3 <- c_get_value_with_ptr ptr 3
-  v4 <- c_get_value_with_ptr ptr 4
-  v5 <- c_get_value_with_ptr ptr 5
-  return [v0, v1, v2, v3, v4, v5]
+getReadLineValuesWithPtr ptr = mapM (c_get_value_with_ptr ptr) [0..5]
 
 -- Reads wrong memory address.
 -- but why?, maybe wrong pointer size?
