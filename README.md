@@ -64,6 +64,6 @@ During the development of this project, issues and pull requests were created fo
 - [Issue - mhs: error: no location: Not a valid C type: () #70 ](https://github.com/augustss/MicroHs/issues/70)
 - [Pull Request - Remove Primitives prefix](https://github.com/augustss/MicroHs/pull/76)
 - [Pull request - Implement clamp in Data.Ord](https://github.com/augustss/MicroHs/pull/78)
-
+- [Issue - Segmentation fault (core dumped)](https://github.com/augustss/MicroHs/issues/79)
 
 To keep everything in one place, the diffs and patches are stored in the `MicroHs_Contributions` folder.
