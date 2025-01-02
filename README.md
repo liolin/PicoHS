@@ -39,6 +39,9 @@ minicom -b 115200 -o -D /dev/ttyACM0
 2. Unplug USB Cable
 3. Switch the PicoGo on (switch on the underside)
 
+It is a good idea to place the PicoGo on a white paper with a black line during initialization.
+The PicoGo will drive better along the line.
+
 ![First working solution](./resources/20241230-First_Working_Solution.mp4)
 
 ## PIO / SPI
