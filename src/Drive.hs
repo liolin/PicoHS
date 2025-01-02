@@ -1,5 +1,5 @@
 module Drive(main) where
-import Prelude
+import Prelude hiding (Integral)
 import Data.Ord(clamp)
 import qualified Pico as P
 import qualified Motor as M
@@ -10,20 +10,24 @@ import Sensor (Sensor, LineColor(..))
 data Car = Car Motor Sensor
 
 type Proportional = Int
--- TODO: Better name
-type Integ        = Int
+type Derivative   = Int
+type Integral     = Int
 type Position     = Int
-type State        = (Proportional, Integ)
+type State        = (Proportional, Integral)
 
+-- | Parameter for calculating the power difference.
 p :: Float
 p = 0.141477
 
+-- | Parameter for calculating the power difference.
 i :: Float
 i = 0.000637
 
+-- | Parameter for calculating the power difference.
 d :: Float
 d = 20.38625;
 
+-- | Maximum speed at which PicoGo should travel.
 maxSpeed :: Int
 maxSpeed = 30
 
@@ -31,10 +35,10 @@ startState :: State
 startState = (0, 0)
 
 main :: IO ()
-main = initCar >>= \car -> appLoop car (0, 0)
+main = initCar >>= flip appLoop (0, 0)
 
 -- | Initialize the car by initializing the motor and the sensor.
--- | It waits for 5s, so that the car can be placed on the floor before initialization starts.
+-- It waits for 5s, so that the car can be placed on the floor before initialization starts.
 initCar :: IO Car
 initCar = do
   P.printLn "Init Application"
@@ -66,19 +70,19 @@ update (prop, int) pos = (pd, (p, i))
     pd = calcPowerDifference p d i
 
 -- | Calculates the proportional position from the given position.
-calcProportional :: Int -> Int
+calcProportional :: Int -> Proportional
 calcProportional position = position - 3000
 
 -- | Calculates the change by x0 - x1
-calcDerivative :: Int -> Int -> Int
+calcDerivative :: Int -> Int -> Derivative
 calcDerivative x0 x1 = x1 - x0
 
 -- | Calculates the new integral from the old one with the given proportional position.
-calcIntegral :: Int -> Int -> Int
+calcIntegral :: Integral -> Int -> Integral
 calcIntegral x0 v = clamp (-5000, 5000) x0 + v
 
 -- | Calculates the power difference for the motors.
-calcPowerDifference :: Int -> Int -> Int -> Int
+calcPowerDifference :: Proportional -> Derivative -> Integral -> Int
 calcPowerDifference proportional derivative integral = clamp (-maxSpeed, maxSpeed) $ prop + der + int
   where
     toInt = fromInteger . truncate
