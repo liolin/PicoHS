@@ -7,8 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "helpers.h"
-
 #include "pico/binary_info.h"
 #include "pico/stdlib.h"
 #include "spi.pio.h"
@@ -37,7 +35,6 @@ uint16_t *_values = 0;
 
 /*
  * This function is used by Haskell code to get the values from _values.
- * TODO: Move this function to helpers.h
  */
 int get_value_with_ptr(uint16_t *ptr, int index) { return (int)ptr[index]; }
 
