@@ -2,8 +2,10 @@ module Drive(main) where
 import Prelude
 import Data.Ord(clamp)
 import qualified Pico as P
-import Motor
-import Sensor
+import qualified Motor as M
+import qualified Sensor as S
+import Motor (Motor)
+import Sensor (Sensor, LineColor(..))
 
 data Car = Car Motor Sensor
 
@@ -37,17 +39,17 @@ initCar :: IO Car
 initCar = do
   P.printLn "Init Application"
   P.sleepMs 5000
-  motor <- initMotor
-  sensor <- initSensor
+  motor <- M.init
+  sensor <- S.init
   P.printLn "Init Application Finished"
   return $ Car motor sensor
 
 -- | The app loop: reading sensor values, calculating power for motors, setting motors, repeat.
 appLoop :: Car -> State -> IO ()
 appLoop car@(Car motor sensor) st = do
-  (position, _) <- readLine sensor Black
+  (position, _) <- S.readLine sensor Black
   let (pd, st') = update st position
-  uncurry (setMotor motor) (calcMotorConfig pd)
+  uncurry (M.set motor) (calcMotorConfig pd)
   appLoop car st'
 
 -- | Calculates the motor config and returns it as a tuple (left motor, right motor).

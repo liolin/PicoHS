@@ -1,12 +1,12 @@
 module Motor
   ( Motor
-  , initMotor
+  , init
   , forward
   , backward
   , left
   , right
   , stop
-  , setMotor
+  , set
   ) where
 import Prelude
 import qualified Pico as P
@@ -15,35 +15,35 @@ import qualified Pico as P
 
 data Motor = Motor
 
-initMotor :: IO Motor
-initMotor = do
+init :: IO Motor
+init = do
   P.printLn "Start Init Motor"
-  c_init_motor
+  c_motor_init
   return Motor
 
 forward  :: Motor -> Int -> IO ()
-forward _ = c_forward
+forward _ = c_motor_forward
 
 backward :: Motor -> Int -> IO ()
-backward _ = c_backward
+backward _ = c_motor_backward
 
 left :: Motor -> Int -> IO ()
-left _ = c_left
+left _ = c_motor_left
 
 right :: Motor -> Int -> IO ()
-right _ = c_right
+right _ = c_motor_right
 
 stop :: Motor -> IO ()
-stop _ = c_stop
+stop _ = c_motor_stop
 
-setMotor :: Motor -> Int -> Int -> IO ()
-setMotor _ = c_set_motor
+set :: Motor -> Int -> Int -> IO ()
+set _ = c_motor_set
 
 
-foreign import ccall "motor.h initMotor" c_init_motor :: IO ()
-foreign import ccall "motor.h forward"   c_forward    :: Int -> IO ()
-foreign import ccall "motor.h backward"  c_backward   :: Int -> IO ()
-foreign import ccall "motor.h left"      c_left       :: Int -> IO ()
-foreign import ccall "motor.h right"     c_right      :: Int -> IO ()
-foreign import ccall "motor.h stop"      c_stop       :: IO ()
-foreign import ccall "motor.h set_motor" c_set_motor  :: Int -> Int -> IO ()
+foreign import ccall "motor.h motor_init"     c_motor_init     :: IO ()
+foreign import ccall "motor.h motor_forward"  c_motor_forward  :: Int -> IO ()
+foreign import ccall "motor.h motor_backward" c_motor_backward :: Int -> IO ()
+foreign import ccall "motor.h motor_left"     c_motor_left     :: Int -> IO ()
+foreign import ccall "motor.h motor_right"    c_motor_right    :: Int -> IO ()
+foreign import ccall "motor.h motor_stop"     c_motor_stop     :: IO ()
+foreign import ccall "motor.h motor_set"      c_motor_set      :: Int -> Int -> IO ()

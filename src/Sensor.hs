@@ -1,57 +1,34 @@
 module Sensor
   ( Sensor
   , LineColor(..)
-  , initSensor
+  , init
   , readLine
   ) where
 import Prelude
 import Foreign
 import Control.Monad (mapM)
 
-import qualified Pico as P
-
-
 data Sensor = Sensor
 data LineColor = Black | White
 
-initSensor :: IO Sensor
-initSensor = do
-  P.printLn "Init Sensor"
-  c_init_sensor
-  return Sensor
+init :: IO Sensor
+init = c_sensor_init >> return Sensor
 
+-- | Calls the C function to read the IR sensors.
 readLine :: Sensor -> LineColor -> IO (Int, [Int])
 readLine _ color = do
-  ptr <- c_read_line (isWhiteLine color) >>= newForeignPtr_
-  P.print "Read from Haskell:\t\t"
-  xs <- withForeignPtr ptr getReadLineValuesWithPtr >>= mapM (\v -> P.printInt v >> P.print " " >> return v)
-  P.printLn ""
+  ptr <- c_sensor_read_line (isWhiteLine color) >>= newForeignPtr_
+  xs <- withForeignPtr ptr getReadLineValuesWithPtr
   return (head xs, tail xs)
 
 isWhiteLine :: LineColor -> Int
 isWhiteLine White = 1
 isWhiteLine Black = 0
 
+-- | Reads 5 Ints from the given pointer. It does the same as peek should do, but with peek I read garbage.
 getReadLineValuesWithPtr :: Ptr Word16 -> IO [Int]
 getReadLineValuesWithPtr ptr = mapM (c_get_value_with_ptr ptr) [0..5]
 
--- Reads wrong memory address.
--- but why?, maybe wrong pointer size?
-myPeek :: Ptr Word16 -> IO [Word16]
-myPeek p1 = do
-  v1 <- peek p1
-  let p2 = plusPtr p1 1
-  v2 <- peek p2
-  let p3 = plusPtr p2 1
-  v3 <- peek p3
-  let p4 = plusPtr p3 1
-  v4 <- peek p4
-  let p5 = plusPtr p4 1
-  v5 <- peek p5
-  let p6 = plusPtr p5 1
-  v6 <- peek p6
-  return [v1, v2, v3, v4, v5, v6]
-
-foreign import ccall "sensor.h init_sensor"          c_init_sensor :: IO ()
-foreign import ccall "sensor.h read_line"            c_read_line   :: Int -> IO (Ptr Word16)
-foreign import ccall "sensor.h get_value_with_ptr"   c_get_value_with_ptr  :: Ptr Word16 -> Int -> IO Int
+foreign import ccall "sensor.h sensor_init"          c_sensor_init        :: IO ()
+foreign import ccall "sensor.h sensor_read_line"     c_sensor_read_line   :: Int -> IO (Ptr Word16)
+foreign import ccall "sensor.h get_value_with_ptr"   c_get_value_with_ptr :: Ptr Word16 -> Int -> IO Int

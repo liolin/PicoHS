@@ -1,6 +1,9 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
+// TODO: Clean up code, and try to only keep init, analog_read and calibrate in
+// here.
+
 #include <stdio.h>
 #include <string.h>
 
@@ -24,6 +27,7 @@ uint _max_fails = 20;
 uint16_t _last_value = 0;
 uint16_t _calibrated_min[5] = {117, 129, 124, 127, 101};
 uint16_t _calibrated_max[5] = {841, 899, 925, 945, 823};
+// TODO: Adjust so only sensor values are stored.
 // [0] position
 // [1..5] sensor values
 uint16_t *_values = 0;
@@ -32,10 +36,11 @@ void calibrate();
 
 /*
  * This function is used by Haskell code to get the values from _values.
+ * TODO: Move this function to helpers.h
  */
 int get_value_with_ptr(uint16_t *ptr, int index) { return (int)ptr[index]; }
 
-void init_sensor() {
+void sensor_init() {
   _values = malloc(sizeof(uint16_t) * (NUM_SENSORS + 1));
   // spi_cpha0_program is an PIO programm defined in spi.pio.
   // In spi.pio its called spi_cpha0
@@ -114,7 +119,7 @@ void read_calibrated(uint16_t *sensor_values) {
   }
 }
 
-uint16_t *read_line(int white_line) {
+uint16_t *sensor_read_line(int white_line) {
   // _values[0] is reserved for the position of the robot relative to the line
   uint16_t *sensor_values = _values + 1;
   read_calibrated(sensor_values);
@@ -129,7 +134,6 @@ uint16_t *read_line(int white_line) {
     }
 
     // keep track of whether we see the line at all
-    // TODO: Python code has value > 200
     if (value < 800) {
       on_line = true;
     }
@@ -151,30 +155,22 @@ uint16_t *read_line(int white_line) {
   }
 
   if (_successive_not_on_line >= _max_fails) {
-    // std::cout << "not on line" << std::endl;
     //  If last read to the left of center, return min.
     if (_last_value < 3050) {
-      // std::cout << "left" << std::endl;
       _last_value = 2500;
     }
     // If last read to the right of center, return the max.
     else {
-      // std::cout << "right" << std::endl;
       _last_value = 3500;
     }
   }
 
   if (on_line) {
-    // std::cout << "on line" << std::endl;
     if (sum != 0)
       _last_value = (uint16_t)(avg / sum);
   }
 
   _values[0] = _last_value;
-
-  printf("Read from C:\t\t\t");
-  print_arr(_values, NUM_SENSORS + 1);
-
   return _values;
 }
 
