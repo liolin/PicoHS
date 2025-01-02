@@ -25,6 +25,9 @@ uint _sm = 0;
 uint _successive_not_on_line = 0;
 uint _max_fails = 20;
 uint16_t _last_value = 0;
+// These values are from
+// https://github.com/MKesenheimer/pico-go/blob/master/trsensor.cpp.
+// It is better to use `calibrate` to calibrate the sensors.
 uint16_t _calibrated_min[5] = {117, 129, 124, 127, 101};
 uint16_t _calibrated_max[5] = {841, 899, 925, 945, 823};
 // TODO: Adjust so only sensor values are stored.
@@ -32,13 +35,31 @@ uint16_t _calibrated_max[5] = {841, 899, 925, 945, 823};
 // [1..5] sensor values
 uint16_t *_values = 0;
 
-void calibrate();
-
 /*
  * This function is used by Haskell code to get the values from _values.
  * TODO: Move this function to helpers.h
  */
 int get_value_with_ptr(uint16_t *ptr, int index) { return (int)ptr[index]; }
+
+void calibrate() {
+  for (size_t i = 0; i < NUM_SENSORS; i++) {
+    _calibrated_min[i] = 1023;
+    _calibrated_max[i] = 0;
+  }
+  uint16_t sensor_values[6] = {0};
+
+  for (size_t j = 0; j < 10; j++) {
+    analog_read(sensor_values);
+    for (size_t i = 0; i < NUM_SENSORS; i++) {
+      if (_calibrated_max[i] < sensor_values[i] && sensor_values[i] != 0) {
+        _calibrated_max[i] = sensor_values[i];
+      }
+      if (_calibrated_min[i] > sensor_values[i] && sensor_values[i] != 0) {
+        _calibrated_min[i] = sensor_values[i];
+      }
+    }
+  }
+}
 
 void sensor_init() {
   _values = malloc(sizeof(uint16_t) * (NUM_SENSORS + 1));
@@ -76,26 +97,6 @@ void analog_read(uint16_t *return_values) {
     busy_wait_us(50);
   }
   memcpy(return_values, values + 1, sizeof(uint16_t) * NUM_SENSORS);
-}
-
-void calibrate() {
-  for (size_t i = 0; i < NUM_SENSORS; i++) {
-    _calibrated_min[i] = 1023;
-    _calibrated_max[i] = 0;
-  }
-  uint16_t sensor_values[6] = {0};
-
-  for (size_t j = 0; j < 10; j++) {
-    analog_read(sensor_values);
-    for (size_t i = 0; i < NUM_SENSORS; i++) {
-      if (_calibrated_max[i] < sensor_values[i] && sensor_values[i] != 0) {
-        _calibrated_max[i] = sensor_values[i];
-      }
-      if (_calibrated_min[i] > sensor_values[i] && sensor_values[i] != 0) {
-        _calibrated_min[i] = sensor_values[i];
-      }
-    }
-  }
 }
 
 /*
