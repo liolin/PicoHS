@@ -54,6 +54,14 @@ minicom -b 115200 -o -D /dev/ttyACM0
 2. Unplug USB Cable
 3. Switch the PicoGo on (switch on the underside)
 
+It is a good idea to place the PicoGo on a white paper with a black line during initialization.
+The PicoGo will drive better along the line.
+
+![First working solution](./resources/20241230-First_Working_Solution.mp4)
+
+## PIO / SPI
+To communicate with the sensors the *Serial peripheral interface (SPI)* is used.
+The Raspberry Pi Pico provides the PIO (Programmable Input/Output) to use the SPI.
 
 ## Prototypes and contributions
 In order to learn how to build an application with MicroHs for an micro controller, two proof of concepts were developed.

@@ -1,3 +1,6 @@
+#ifndef MOTOR_H
+#define MOTOR_H
+
 #include "hardware/pwm.h"
 #include "pico/stdlib.h"
 
@@ -11,7 +14,7 @@
 uint sliceA = 0;
 uint sliceB = 0;
 
-void initMotor() {
+void motor_init() {
   gpio_init(AIN1);
   gpio_init(AIN2);
   gpio_init(BIN1);
@@ -35,7 +38,7 @@ void initMotor() {
   pwm_set_enabled(sliceB, true);
 }
 
-void forward(int speed) {
+void motor_forward(int speed) {
   if (speed >= 0 && speed <= 100) {
     pwm_set_chan_level(sliceA, PWM_CHAN_A, speed * 0xFFFF / 100);
     pwm_set_chan_level(sliceB, PWM_CHAN_B, speed * 0xFFFF / 100);
@@ -46,7 +49,7 @@ void forward(int speed) {
   }
 }
 
-void backward(int speed) {
+void motor_backward(int speed) {
   if (speed >= 0 && speed <= 100) {
     pwm_set_chan_level(sliceA, PWM_CHAN_A, speed * 0xFFFF / 100);
     pwm_set_chan_level(sliceB, PWM_CHAN_B, speed * 0xFFFF / 100);
@@ -57,7 +60,7 @@ void backward(int speed) {
   }
 }
 
-void left(int speed) {
+void motor_left(int speed) {
   if (speed >= 0 && speed <= 100) {
     pwm_set_chan_level(sliceA, PWM_CHAN_A, speed * 0xFFFF / 100);
     pwm_set_chan_level(sliceB, PWM_CHAN_B, speed * 0xFFFF / 100);
@@ -68,7 +71,7 @@ void left(int speed) {
   }
 }
 
-void right(int speed) {
+void motor_right(int speed) {
   if (speed >= 0 && speed <= 100) {
     pwm_set_chan_level(sliceA, PWM_CHAN_A, speed * 0xFFFF / 100);
     pwm_set_chan_level(sliceB, PWM_CHAN_B, speed * 0xFFFF / 100);
@@ -79,7 +82,7 @@ void right(int speed) {
   }
 }
 
-void stop() {
+void motor_stop() {
   pwm_set_chan_level(sliceA, PWM_CHAN_A, 0);
   pwm_set_chan_level(sliceB, PWM_CHAN_B, 0);
   gpio_put(AIN1, false);
@@ -88,28 +91,26 @@ void stop() {
   gpio_put(BIN2, false);
 }
 
-void set_motor(int left, int right) {
+void motor_set(int left, int right) {
   if (left >= 0 && left <= 100) {
     gpio_put(AIN1, true);
     gpio_put(AIN2, false);
     pwm_set_chan_level(sliceA, PWM_CHAN_A, (left * 0xFFFF / 100));
-  }
-
-  if (left < 0 && left >= -100) {
+  } else if (left < 0 && left >= -100) {
     gpio_put(AIN1, false);
     gpio_put(AIN2, true);
     pwm_set_chan_level(sliceA, PWM_CHAN_A, -(left * 0xFFFF / 100));
   }
 
   if (right >= 0 && right <= 100) {
-    gpio_put(BIN1, true);
-    gpio_put(BIN2, false);
-    pwm_set_chan_level(sliceB, PWM_CHAN_B, (right * 0xFFFF / 100));
-  }
-
-  if (right < 0 && right >= -100) {
     gpio_put(BIN1, false);
     gpio_put(BIN2, true);
+    pwm_set_chan_level(sliceB, PWM_CHAN_B, (right * 0xFFFF / 100));
+  } else if (right < 0 && right >= -100) {
+    gpio_put(BIN1, true);
+    gpio_put(BIN2, false);
     pwm_set_chan_level(sliceB, PWM_CHAN_B, -(right * 0xFFFF / 100));
   }
 }
+
+#endif /* MOTOR_H */
