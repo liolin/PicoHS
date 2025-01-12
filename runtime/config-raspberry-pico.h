@@ -70,7 +70,7 @@
 #define SANITY 1   /* do some sanity checks */
 #define STACKOVL 1 /* check for stack overflow */
 
-#define HEAP_CELLS 12000
+#define HEAP_CELLS 13000
 #define STACK_SIZE 500
 
 #define INITIALIZATION
